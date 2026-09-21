@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="ru">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+<meta name="referrer" content="no-referrer">
+<title>Золотник — демонстрационный макет сайта</title>
+<meta name="description" content="Демонстрационный макет одностраничного сайта, собранный для «Золотник». Не является сайтом компании.">
+<style>
+@import url("./shrifty/shrifty.css");
+
+:root{
+  --fon:#0E1011;
+  --pod:#15191B;
+  --tekst:#EDEAE3;
+  --tihiy:#8B9490;
+  --gran:rgba(237,234,227,.10);
+  --gran2:rgba(237,234,227,.18);
+  --akcent:#E8552D;
+  --akcent-rgb:232, 85, 45;
+  --natemnom:#0E1011;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--fon);
+  color:var(--tekst);
+  font-family:'Golos Text',system-ui,-apple-system,sans-serif;
+  font-size:16px;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+a{color:inherit;text-decoration:none}
+h1,h2,h3{margin:0;font-weight:600;letter-spacing:-.03em}
+p{margin:0}
+
+.wrap{width:min(1248px, 100% - 40px);margin:0 auto}
+
+/* ── кнопки ─────────────────────────────────────── */
+.knopka{
+  display:inline-flex;align-items:center;justify-content:center;
+  height:50px;padding:0 28px;border-radius:999px;
+  background:var(--akcent);color:var(--natemnom);
+  font-size:15px;font-weight:600;letter-spacing:-.01em;white-space:nowrap;
+}
+.knopka--tihaya{background:transparent;color:var(--tekst);border:1px solid var(--gran2)}
+.knopka--malaya{height:42px;padding:0 22px;font-size:14px}
+.knopka--temnaya{background:var(--natemnom);color:var(--tekst)}
+
+/* ── шапка ──────────────────────────────────────── */
+.shapka{border-bottom:1px solid var(--gran)}
+.shapka .wrap{display:flex;align-items:center;gap:36px;height:88px}
+.logo{display:flex;align-items:center;gap:13px}
+.znak{position:relative;width:30px;height:30px;border-radius:50%;border:1.5px solid var(--akcent);flex:none}
+.znak::after{content:"";position:absolute;inset:8px;border-radius:50%;border:1.5px solid var(--akcent);opacity:.45}
+.logo-t{display:block;font-size:19px;font-weight:700;letter-spacing:-.02em;line-height:1.1}
+.logo-t em{display:block;font-style:normal;font-size:10px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:var(--tihiy);margin-top:3px}
+.menyu{margin-left:auto;display:flex;gap:30px;font-size:15px;color:var(--tihiy)}
+.shapka .knopka{margin-left:32px}
+
+/* ── первый экран ───────────────────────────────── */
+.geroy{position:relative;overflow:hidden;border-bottom:1px solid var(--gran)}
+.geroy::before{
+  content:"";position:absolute;right:-240px;top:-300px;width:920px;height:920px;
+  background:radial-gradient(circle, rgba(203,242,77,.11), rgba(203,242,77,0) 62%);
+}
+.motiv{position:absolute;right:-236px;top:-152px;width:660px;height:660px}
+.motiv i{position:absolute;inset:0;border-radius:50%;border:1px solid rgba(203,242,77,.42)}
+.motiv i:nth-child(2){inset:78px;border-color:rgba(203,242,77,.30)}
+.motiv i:nth-child(3){inset:216px;border-color:rgba(203,242,77,.22)}
+.motiv i:nth-child(4){inset:296px;border-color:rgba(203,242,77,.55)}
+.zubya{
+  position:absolute;inset:-13px;
+  background:repeating-conic-gradient(from 0deg, rgba(203,242,77,.34) 0 .62deg, rgba(203,242,77,0) .62deg 7.2deg);
+  -webkit-mask:radial-gradient(circle, transparent 0 325px, #000 325px 343px, transparent 343px);
+          mask:radial-gradient(circle, transparent 0 325px, #000 325px 343px, transparent 343px);
+}
+.geroy .wrap{position:relative;z-index:2;display:grid;grid-template-columns:1fr 372px;gap:72px;padding:88px 0 76px;align-items:start}
+
+.nadzag{display:inline-flex;align-items:center;gap:10px;font-size:12px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--akcent)}
+.nadzag::before{content:"";width:22px;height:1px;background:var(--akcent)}
+h1{font-size:74px;line-height:1.03;margin-top:24px;letter-spacing:-.04em}
+.lid{margin-top:26px;max-width:540px;font-size:18px;line-height:1.6;color:var(--tihiy)}
+.lid b{color:var(--tekst);font-weight:500}
+.dey{display:flex;gap:14px;margin-top:38px;flex-wrap:wrap}
+
+.fakty{display:grid;grid-template-columns:repeat(3,1fr);margin-top:52px;border-top:1px solid var(--gran2)}
+.fakt{padding:22px 24px 0 0}
+.fakt b{display:block;font-size:26px;font-weight:600;letter-spacing:-.03em}
+.fakt span{display:block;margin-top:8px;font-size:14px;line-height:1.45;color:var(--tihiy)}
+
+.panel{background:var(--pod);border:1px solid var(--gran);padding:26px 28px 24px}
+.p-shapka{display:flex;align-items:center;gap:9px;font-size:12px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--tihiy)}
+.p-shapka::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--akcent);flex:none}
+.p-row{display:flex;justify-content:space-between;align-items:baseline;gap:18px;padding:17px 0;border-bottom:1px solid var(--gran)}
+.p-row:first-of-type{margin-top:6px}
+.p-row span{font-size:14px;color:var(--tihiy)}
+.p-row b{font-size:15px;font-weight:600;text-align:right;white-space:nowrap}
+.p-snoska{margin-top:18px;font-size:13px;line-height:1.5;color:var(--tihiy)}
+
+/* ── секции ─────────────────────────────────────── */
+.sek{padding:76px 0;border-bottom:1px solid var(--gran)}
+.sek .wrap{display:grid;grid-template-columns:200px 1fr;gap:48px;align-items:start}
+.rail .cherta{display:block;width:40px;height:2px;background:var(--akcent)}
+.rail b{display:block;margin-top:20px;font-size:13px;font-weight:700;letter-spacing:.1em;color:var(--akcent)}
+.rail span{display:block;margin-top:7px;font-size:13px;letter-spacing:.11em;text-transform:uppercase;color:var(--tihiy)}
+h2{font-size:42px;line-height:1.08}
+.podzag{margin-top:18px;max-width:620px;font-size:17px;line-height:1.6;color:var(--tihiy)}
+
+/* услуги */
+.gruppa{margin-top:40px}
+.gr{display:flex;align-items:baseline;gap:14px;padding-bottom:14px;border-bottom:1px solid var(--gran2)}
+.gr b{font-size:17px;font-weight:600;letter-spacing:-.01em}
+.gr i{font-style:normal;font-size:13px;color:var(--tihiy)}
+.prays{list-style:none;margin:0;padding:0}
+.prays li{display:grid;grid-template-columns:1fr auto;gap:36px;align-items:baseline;padding:17px 0;border-bottom:1px solid var(--gran)}
+.p-n{font-size:18px;font-weight:500;letter-spacing:-.015em}
+.p-o{display:block;margin-top:7px;max-width:520px;font-size:14px;line-height:1.5;color:var(--tihiy)}
+.p-c{font-size:19px;font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums}
+.p-c em{font-style:normal;margin-right:7px;font-size:14px;font-weight:400;color:var(--tihiy)}
+.snoska{margin-top:26px;padding-left:16px;border-left:2px solid var(--akcent);max-width:640px;font-size:14px;line-height:1.55;color:var(--tihiy)}
+
+/* шаги */
+.shagi{display:grid;grid-template-columns:repeat(4,1fr);gap:36px;margin-top:44px;border-top:1px solid var(--gran2)}
+.shag{position:relative;padding-top:28px}
+.shag::before{content:"";position:absolute;top:-1px;left:0;width:30px;height:2px;background:var(--akcent)}
+.shag b{font-size:13px;font-weight:700;letter-spacing:.1em;color:var(--akcent)}
+.shag h3{margin:14px 0 11px;font-size:21px;letter-spacing:-.025em}
+.shag p{font-size:15px;line-height:1.6;color:var(--tihiy)}
+
+/* отзывы */
+.otzyvy{display:grid;grid-template-columns:repeat(3,1fr);gap:44px;margin-top:42px}
+.otzyvy figure{margin:0;display:flex;flex-direction:column;height:100%}
+.otzyvy figure::before{content:"";display:block;width:30px;height:2px;background:var(--akcent);margin-bottom:22px}
+.otzyvy blockquote{flex:1;margin:0;font-size:17px;line-height:1.62;text-indent:-.42em}
+.otzyvy figcaption{margin-top:22px;padding-top:16px;border-top:1px solid var(--gran)}
+.otzyvy figcaption b{display:block;font-size:15px;font-weight:600}
+.otzyvy figcaption span{display:block;margin-top:4px;font-size:13px;color:var(--tihiy)}
+
+/* заявка */
+.zayavka{background:var(--akcent);color:var(--natemnom)}
+.zayavka .wrap{display:grid;grid-template-columns:1fr 372px;gap:72px;padding:74px 0;align-items:start}
+.zayavka .nadzag{color:rgba(14,16,17,.62)}
+.zayavka .nadzag::before{background:rgba(14,16,17,.62)}
+.zayavka h2{margin-top:22px;font-size:46px;max-width:740px}
+.zayavka .lid{color:rgba(14,16,17,.72);max-width:560px}
+.z-pod{display:block;margin-top:20px;font-size:14px;color:rgba(14,16,17,.62)}
+.z-spisok{padding-top:8px}
+.z-spisok h3{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(14,16,17,.6)}
+.z-spisok ul{list-style:none;margin:14px 0 0;padding:0}
+.z-spisok li{padding:15px 0;border-top:1px solid rgba(14,16,17,.18);font-size:15px;line-height:1.5}
+.z-spisok li:last-child{border-bottom:1px solid rgba(14,16,17,.18)}
+
+/* подвал */
+.podval{padding:56px 0 40px}
+.f-verh{display:grid;grid-template-columns:1fr 200px 200px 220px;gap:40px;align-items:start}
+.f-opis{margin-top:18px;max-width:300px;font-size:14px;line-height:1.55;color:var(--tihiy)}
+.f-kol h4{margin:0 0 16px;font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--tihiy)}
+.f-kol p,.f-kol a{display:block;font-size:14px;line-height:1.5;color:var(--tekst);margin-bottom:10px}
+.f-kol .tih{color:var(--tihiy)}
+.f-niz{display:flex;justify-content:space-between;gap:32px;margin-top:46px;padding-top:24px;border-top:1px solid var(--gran);font-size:13px;line-height:1.5;color:var(--tihiy)}
+
+/* ── мобильная ──────────────────────────────────── */
+@media (max-width:760px){
+  .shapka .wrap{height:auto;padding:16px 0;gap:12px}
+  .menyu{display:none}
+  .shapka .knopka{margin-left:auto;height:40px;padding:0 18px;font-size:14px}
+  .logo-t{font-size:17px}
+
+  .geroy .wrap{grid-template-columns:1fr;gap:38px;padding:52px 0 58px}
+  .motiv{right:-296px;top:-104px;width:430px;height:430px;opacity:.5}
+  .geroy::before{right:-300px;top:-340px;width:620px;height:620px}
+  .zubya{-webkit-mask:radial-gradient(circle, transparent 0 210px, #000 210px 223px, transparent 223px);mask:radial-gradient(circle, transparent 0 210px, #000 210px 223px, transparent 223px)}
+  .motiv i:nth-child(2){inset:50px}
+  .motiv i:nth-child(3){inset:140px}
+  .motiv i:nth-child(4){inset:192px}
+  h1{font-size:39px;line-height:1.06;letter-spacing:-.03em;margin-top:20px}
+  .lid{font-size:16px;margin-top:20px}
+  .dey{margin-top:30px;gap:10px}
+  .dey .knopka{height:46px;padding:0 22px;font-size:14px}
+  .fakty{grid-template-columns:1fr;margin-top:40px;border-top:none}
+  .fakt{display:flex;justify-content:space-between;align-items:baseline;gap:18px;padding:15px 0;border-top:1px solid var(--gran)}
+  .fakt b{font-size:18px}
+  .fakt span{margin-top:0;text-align:right;max-width:200px;font-size:13px}
+
+  .sek{padding:54px 0}
+  .sek .wrap{grid-template-columns:1fr;gap:26px}
+  h2{font-size:29px}
+  .podzag{font-size:16px;margin-top:14px}
+  .gruppa{margin-top:34px}
+  .prays li{gap:18px;padding:16px 0}
+  .p-n{font-size:16px}
+  .p-o{font-size:13px;margin-top:5px}
+  .p-c{font-size:16px}
+  .p-c em{font-size:13px;margin-right:5px}
+
+  .shagi{grid-template-columns:1fr;gap:0;margin-top:34px;border-top:none}
+  .shag{padding:24px 0 24px;border-top:1px solid var(--gran2)}
+  .shag::before{top:-1px}
+  .shag h3{margin:12px 0 9px;font-size:19px}
+
+  .otzyvy{grid-template-columns:1fr;gap:34px;margin-top:34px}
+  .otzyvy blockquote{font-size:16px}
+
+  .zayavka .wrap{grid-template-columns:1fr;gap:34px;padding:56px 0}
+  .zayavka h2{font-size:30px;margin-top:18px}
+
+  .podval{padding:48px 0 36px}
+  .f-verh{grid-template-columns:1fr;gap:30px}
+  .f-niz{flex-direction:column;gap:12px;margin-top:36px}
+}
+
+/* ── мотив в шапке: наследник .koleso из портфолио, но своя геометрия ── */
+.motiv{position:absolute;right:-236px;top:-152px;width:660px;height:660px;pointer-events:none}
+.motiv i{position:absolute;inset:0;border-radius:50%;border:1px solid rgba(var(--akcent-rgb),.40)}
+.motiv--disk i:nth-child(2){inset:54px;border-color:rgba(var(--akcent-rgb),.26)}
+.motiv--disk i:nth-child(3){inset:238px;border-color:rgba(var(--akcent-rgb),.22)}
+.motiv--disk i:nth-child(4){inset:286px;border-color:rgba(var(--akcent-rgb),.55)}
+.motiv--disk .zubya{position:absolute;inset:-13px;
+  background:repeating-conic-gradient(from 0deg, rgba(var(--akcent-rgb),.30) 0 2.1deg, rgba(var(--akcent-rgb),0) 2.1deg 9deg);
+  -webkit-mask:radial-gradient(circle, transparent 0 250px, #000 250px 316px, transparent 316px);
+          mask:radial-gradient(circle, transparent 0 250px, #000 250px 316px, transparent 316px)}
+/* Колесо крупнее и смещено так, чтобы в кадр попала дуга протектора,
+   а не невнятное пятно. Три слоя: внешний обод, шашки, диск со спицами. */
+.motiv--protektor{right:-300px;top:-210px;width:820px;height:820px}
+.motiv--protektor i:nth-child(1){border-width:2px;border-color:rgba(var(--akcent-rgb),.55)}
+.motiv--protektor i:nth-child(2){inset:116px;border-color:rgba(var(--akcent-rgb),.34)}
+.motiv--protektor i:nth-child(3){inset:300px;border-width:2px;border-color:rgba(var(--akcent-rgb),.46)}
+/* шашки протектора: два ряда в шахматном порядке, как на реальной покрышке */
+.motiv--protektor .zubya{position:absolute;inset:0;
+  background:repeating-conic-gradient(from 0deg,
+    rgba(var(--akcent-rgb),.40) 0 3.4deg, rgba(var(--akcent-rgb),0) 3.4deg 9deg);
+  -webkit-mask:radial-gradient(circle, transparent 0 350px, #000 350px 392px, transparent 392px);
+          mask:radial-gradient(circle, transparent 0 350px, #000 350px 392px, transparent 392px)}
+.motiv--protektor .zubya2{position:absolute;inset:0;
+  background:repeating-conic-gradient(from 4.5deg,
+    rgba(var(--akcent-rgb),.28) 0 3.4deg, rgba(var(--akcent-rgb),0) 3.4deg 9deg);
+  -webkit-mask:radial-gradient(circle, transparent 0 296px, #000 296px 340px, transparent 340px);
+          mask:radial-gradient(circle, transparent 0 296px, #000 296px 340px, transparent 340px)}
+.motiv--volny i:nth-child(2){inset:80px}
+.motiv--volny i:nth-child(3){inset:176px}
+.motiv--volny i:nth-child(4){inset:286px;border-color:rgba(var(--akcent-rgb),.50)}
+.motiv--kolca i:nth-child(2){inset:104px}
+.motiv--kolca i:nth-child(3){inset:252px;border-color:rgba(var(--akcent-rgb),.48)}
+
+/* ── плашка «это демонстрационный макет» ── */
+.plashka{position:sticky;top:0;z-index:50;background:var(--pod);border-bottom:1px solid var(--gran2)}
+.plashka .wrap{display:flex;align-items:flex-start;gap:11px;
+  padding:11px 0;font-size:13px;line-height:1.45;color:var(--tihiy)}
+.plashka .tochka{margin-top:6px}
+.plashka b{color:var(--tekst);font-weight:600}
+.plashka .tochka{width:7px;height:7px;border-radius:50%;background:var(--akcent);flex:none}
+
+/* ── строка прайса: имя и цена в ряд, описание отдельной строкой во всю ширину.
+      Пока описание лежало в одной ячейке с именем, колонка цены на 375px
+      отжимала его до половины экрана и текст рвался по два слова. ── */
+.prays li .p-n{grid-column:1}
+.prays li .p-c{grid-column:2}
+.prays li{row-gap:0}
+.prays li .p-o{grid-column:1 / -1;margin-top:7px}
+
+/* ── источник цифр: маленькая подпись под блоком ── */
+.istochnik{margin-top:18px;font-size:13px;line-height:1.5;color:var(--tihiy)}
+.istochnik a{color:var(--tekst);text-decoration:underline;text-underline-offset:3px}
+
+/* ── репутация: только то, что опубликовано на картах. Отзывы за бизнес
+      не выдумываются ни при каких условиях, поэтому здесь цифры, а не цитаты ── */
+.reyting{display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:center;margin-top:30px;
+  padding:26px 28px;background:var(--pod);border:1px solid var(--gran)}
+.reyting-ch{display:flex;flex-direction:column;gap:12px}
+.reyting b{font-size:64px;font-weight:600;letter-spacing:-.045em;font-variant-numeric:tabular-nums;line-height:.9}
+.reyting p{font-size:15px;line-height:1.55;color:var(--tihiy);max-width:420px}
+.zvezdy{display:flex;gap:5px}
+.zvezdy u{width:22px;height:4px;border-radius:2px;background:var(--akcent);display:block}
+.zvezdy u.pusto{background:var(--gran2)}
+
+.temy{margin-top:30px;display:grid;gap:18px;max-width:640px}
+.tema{display:grid;grid-template-columns:1fr auto;gap:8px 18px;align-items:baseline}
+.tema b{font-size:16px;font-weight:500;letter-spacing:-.01em}
+.tema i{font-style:normal;font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tema u{grid-column:1 / -1;display:block;height:6px;border-radius:3px;background:var(--gran2);
+  position:relative;overflow:hidden;text-decoration:none}
+.tema u::after{content:"";position:absolute;inset:0 auto 0 0;width:var(--dolya);
+  border-radius:3px;background:var(--akcent)}
+.tema span{grid-column:1 / -1;font-size:13px;color:var(--tihiy);margin-top:-2px}
+
+/* ── кнопка телефона: главный способ связи у местного бизнеса ── */
+.knopka--tel{font-variant-numeric:tabular-nums;letter-spacing:.01em}
+
+@media (max-width:760px){
+  /* На 375px липкая плашка съедала бы пятую часть экрана и резала строки
+     под собой. Предупреждение остаётся вверху и продублировано в подвале. */
+  .plashka{position:static}
+  .motiv{right:-296px;top:-104px;width:430px;height:430px;opacity:.38}
+  .motiv--disk .zubya{-webkit-mask:radial-gradient(circle, transparent 0 163px, #000 163px 206px, transparent 206px);
+                              mask:radial-gradient(circle, transparent 0 163px, #000 163px 206px, transparent 206px)}
+  /* колесо уводится за правый край: на 375px оно иначе проходит прямо под H1 */
+  .motiv--protektor{right:-356px;top:-188px;width:560px;height:560px;opacity:.30}
+  .motiv--protektor i:nth-child(2){inset:79px}
+  .motiv--protektor i:nth-child(3){inset:205px}
+  .motiv--protektor .zubya{-webkit-mask:radial-gradient(circle, transparent 0 239px, #000 239px 268px, transparent 268px);
+                                   mask:radial-gradient(circle, transparent 0 239px, #000 239px 268px, transparent 268px)}
+  .motiv--protektor .zubya2{-webkit-mask:radial-gradient(circle, transparent 0 202px, #000 202px 232px, transparent 232px);
+                                    mask:radial-gradient(circle, transparent 0 202px, #000 202px 232px, transparent 232px)}
+  .motiv--disk i:nth-child(2){inset:35px}
+  .motiv--disk i:nth-child(3){inset:155px}
+  .motiv--disk i:nth-child(4){inset:186px}
+  .motiv--volny i:nth-child(2){inset:52px}
+  .motiv--volny i:nth-child(3){inset:114px}
+  .motiv--volny i:nth-child(4){inset:186px}
+  .motiv--kolca i:nth-child(2){inset:68px}
+  .motiv--kolca i:nth-child(3){inset:164px}
+  .reyting{grid-template-columns:1fr;gap:18px;padding:22px}
+  .reyting b{font-size:48px}
+}
+
+</style>
+<div class="plashka"><div class="wrap">
+  <span class="tochka"></span>
+  <span><b>Демонстрационный макет</b> — не сайт компании. Собран по открытым данным
+  карточек «Золотник», чтобы показать, как выглядел бы её сайт.</span>
+</div></div>
+
+<header class="shapka">
+  <div class="wrap">
+    <a class="logo" href="#"><span class="znak"></span>
+      <span class="logo-t">Золотник<em>шиномонтаж</em></span></a>
+    <nav class="menyu"><a href="#uslugi">Что делаем</a><a href="#kak">Как записаться</a><a href="#otzyvy">Отзывы</a></nav>
+    <a class="knopka knopka--malaya knopka--tel" href="tel:+79601929404">+7 960 192-94-04</a>
+  </div>
+</header>
+
+<section class="geroy">
+  <div class="motiv motiv--protektor"><i></i><i></i><i></i><span class="zubya"></span><span class="zubya2"></span></div>
+  <div class="wrap">
+    <div>
+      <span class="nadzag">Шиномонтаж на Молодёжном</span>
+      <h1>Переобуться<br>по записи, без очереди</h1>
+      <p class="lid">Работаем <b>по предварительной записи</b>: приезжаете к своему времени, а не стоите в общей очереди в первый снег. Переобуть все четыре колеса — от 800 до 1 900 ₽ в зависимости от размера.</p>
+      <div class="dey">
+        <a class="knopka knopka--tel" href="tel:+79601929404">Позвонить +7 960 192-94-04</a>
+        <a class="knopka knopka--tihaya" href="#uslugi">Посмотреть цены</a>
+      </div>
+      <div class="fakty"><div class="fakt"><b>5,0</b><span>рейтинг на Яндекс.Картах, 74 оценки</span></div><div class="fakt"><b>37</b><span>отзывов, 96 % положительных о работе</span></div><div class="fakt"><b>800–1 900 ₽</b><span>переобуть все четыре колеса</span></div></div>
+    </div>
+    <aside class="panel">
+      <div class="p-shapka">Коротко</div>
+      <div class="p-row"><span>Записаться</span><b>по телефону</b></div><div class="p-row"><span>Будни</span><b>09:00–20:00</b></div><div class="p-row"><span>Суббота и воскресенье</span><b>выходной</b></div><div class="p-row"><span>Оплата</span><b>наличными или переводом</b></div>
+      <p class="p-snoska">Суббота и воскресенье — выходные. В сезон смены резины будни разбирают за несколько дней, поэтому звоните заранее.</p>
+    </aside>
+  </div>
+</section>
+
+<section class="sek" id="uslugi">
+  <div class="wrap">
+    <div class="rail"><span class="cherta"></span><b>01</b><span>Услуги</span></div>
+    <div>
+      <h2>Что делаем</h2>
+      <p class="podzag">Четыре работы, за которыми сюда приезжают. Цену называем по телефону или на месте — до того, как начать.</p>
+      <div class="gruppa">
+        <div class="gr"><b>Колёса</b><i>по предварительной записи</i></div>
+        <ul class="prays">
+          <li><span class="p-n">Шиномонтаж</span><span class="p-c">800–1 900 ₽</span><span class="p-o">Снять, перебортировать, поставить обратно и проверить давление. Сезонная смена всех четырёх колёс — от 800 до 1 900 ₽, зависит от размера и типа диска</span></li>
+          <li><span class="p-n">Балансировка</span><span class="p-o">Ставим колесо на станок и убираем биение — то самое, от которого на трассе дрожит руль</span></li>
+          </ul>
+      </div>
+      <div class="gruppa">
+        <div class="gr"><b>Ремонт</b><i>срок называем на месте</i></div>
+        <ul class="prays">
+          <li><span class="p-n">Вулканизация, ремонт порезов</span><span class="p-o">Заклеиваем боковой порез и прокол изнутри, горячим способом. Смотрим покрышку целиком: если ремонт небезопасен — скажем прямо</span></li>
+          <li><span class="p-n">Правка и прокатка дисков</span><span class="p-o">Выправляем погнутый обод после ямы. Прокатка — для литых, правка — для стальных</span></li>
+          </ul>
+      </div>
+      <p class="snoska">Точную сумму называем до начала работы. Без вашего согласия ничего сверх заявленного не делаем и в счёт не дописываем.</p><p class="istochnik">Список работ и цена на сезонную смену — из карточек «Золотника» на Яндекс.Картах и в 2ГИС по состоянию на 21 сентября 2026 года.</p>
+    </div>
+  </div>
+</section>
+
+<section class="sek" id="kak">
+  <div class="wrap">
+    <div class="rail"><span class="cherta"></span><b>02</b><span>Как работаем</span></div>
+    <div>
+      <h2>Как записаться</h2>
+      <p class="podzag">Мастерская работает по записи — так никто не сидит в очереди по два часа.</p>
+      <div class="shagi"><div class="shag"><b>01</b><h3>Звонок</h3><p>Наберите +7 960 192-94-04 в будни с 09:00 до 20:00. Скажите марку машины и размер колёс — этого достаточно, чтобы назвать время и сумму.</p></div><div class="shag"><b>02</b><h3>Своё время</h3><p>Приезжаете на Молодёжный проспект, 80к3 к назначенному часу. Ждать очередь не нужно: на это время записаны только вы.</p></div><div class="shag"><b>03</b><h3>Работа при вас</h3><p>Видите, что делают с вашими колёсами. Если по ходу находится порез или гнутый диск, сначала показываем и называем цену, потом чиним.</p></div><div class="shag"><b>04</b><h3>Оплата</h3><p>Наличными или переводом с карты, после работы.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="sek" id="otzyvy">
+  <div class="wrap">
+    <div class="rail"><span class="cherta"></span><b>03</b><span>Отзывы</span></div>
+    <div>
+      <h2>Что говорят на картах</h2>
+      <div class="reyting">
+        <div class="reyting-ch"><b>5,0</b><div class="zvezdy"><u></u><u></u><u></u><u></u><u></u></div></div>
+        <p>74 оценки на Яндекс.Картах и 4,7 из 19 оценок в 2ГИС. Ни одной оценки ниже четырёх за последний год.</p>
+      </div>
+      <div class="temy"><div class="tema"><b>Персонал</b><i>100&nbsp;%</i><u style="--dolya:100%"></u><span>24 отзыва, все положительные</span></div><div class="tema"><b>Сама работа</b><i>96&nbsp;%</i><u style="--dolya:96%"></u><span>24 отзыва о шиномонтаже</span></div><div class="tema"><b>Время ожидания</b><i>100&nbsp;%</i><u style="--dolya:100%"></u><span>10 отзывов, ни одной жалобы на очередь</span></div></div>
+      <p class="istochnik">Разбор по темам публикуют сами Яндекс.Карты на основании 37 отзывов. Данные на 21 сентября 2026 года.</p>
+    </div>
+  </div>
+</section>
+
+<section class="zayavka" id="zayavka">
+  <div class="wrap">
+    <div>
+      <span class="nadzag">Заявка</span>
+      <h2>Позвоните — назовём время и сумму сразу</h2>
+      <p class="lid">Запись занимает минуту. Если мастер в этот момент под машиной — перезвонит, как освободится.</p>
+      <div class="dey">
+        <a class="knopka knopka--temnaya knopka--tel" href="tel:+79601929404">+7 960 192-94-04</a>
+      </div>
+      <span class="z-pod">Будни 09:00–20:00 · Молодёжный проспект, 80к3</span>
+    </div>
+    <div class="z-spisok"><h3>Что сказать при звонке</h3><ul><li>Марка машины и размер колёс — он написан на боковине покрышки</li><li>Что нужно: сезонная смена, балансировка, порез или диск</li><li>Когда вам удобно приехать</li></ul></div>
+  </div>
+</section>
+
+<footer class="podval">
+  <div class="wrap">
+    <div class="f-verh">
+      <div>
+        <a class="logo" href="#"><span class="znak"></span>
+          <span class="logo-t">Золотник<em>шиномонтаж</em></span></a>
+        <p class="f-opis">Шиномонтажная мастерская на Молодёжном проспекте. Шиномонтаж, балансировка, вулканизация, правка дисков. Работаем по записи.</p>
+      </div>
+      <div class="f-kol">
+        <h4>Где и когда</h4>
+        <p>Молодёжный проспект, 80к3</p>
+        <p>Пн–Пт 09:00–20:00, сб и вс — выходной</p>
+        <a href="tel:+79601929404">+7 960 192-94-04</a>
+      </div>
+      <div class="f-kol"><h4>Разделы</h4><a href="#uslugi">Что делаем</a><a href="#kak">Как записаться</a><a href="#otzyvy">Отзывы</a></div>
+      <div class="f-kol">
+        <h4>Об этой странице</h4>
+        <p class="tih">Демонстрационный макет. Собран по открытым данным карточек и компании не принадлежит.</p>
+      </div>
+    </div>
+    <div class="f-niz">
+      <span>Шиномонтаж «Золотник» · Нижний Новгород</span>
+      <span>Цены на странице — ориентир и не являются публичной офертой</span>
+    </div>
+  </div>
+</footer>
+</html>
