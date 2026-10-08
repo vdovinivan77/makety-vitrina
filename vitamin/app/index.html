@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Витамин — расчёт и запись</title>
+<link rel="stylesheet" href="../shrifty/shrifty.css">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{
+  --fon:#0E1011; --pod:#15191B; --pod2:#1B2023; --tekst:#EDEAE3; --tihiy:#8B9490;
+  --gran:rgba(237,234,227,.10); --gran2:rgba(237,234,227,.18); --akcent:#CBF24D; --natemnom:#0E1011;
+  --niz:calc(112px + env(safe-area-inset-bottom));
+}
+*{box-sizing:border-box;margin:0;padding:0}
+[hidden]{display:none!important}
+html,body{background:var(--fon);color:var(--tekst)}
+body{font-family:'Golos Text',system-ui,-apple-system,sans-serif;font-size:16px;line-height:1.4;
+  -webkit-font-smoothing:antialiased;padding-bottom:var(--niz);-webkit-tap-highlight-color:transparent}
+.cifry{font-variant-numeric:tabular-nums;white-space:nowrap}
+
+.plashka{display:flex;align-items:center;justify-content:center;gap:8px;height:26px;font-size:12px;
+  letter-spacing:.02em;color:var(--tihiy);border-bottom:1px solid var(--gran)}
+.plashka::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--akcent)}
+
+.shapka{padding:20px 20px 16px}
+.shapka h1{font-size:30px;line-height:1.1;font-weight:600;letter-spacing:-.01em}
+.shapka .rod{margin-top:4px;color:var(--tihiy)}
+.fakty{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.fakt{font-size:13px;padding:6px 10px;border:1px solid var(--gran2);border-radius:999px;color:var(--tekst)}
+.fakt b{font-weight:600;color:var(--akcent)}
+
+.verh{position:sticky;top:0;z-index:5;padding:8px 16px;background:var(--fon)}
+.vkladki{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;
+  padding:4px;background:var(--pod);border:1px solid var(--gran);border-radius:14px}
+.vkladka{font:inherit;font-size:15px;font-weight:500;color:var(--tihiy);background:none;border:0;
+  height:40px;border-radius:10px;cursor:pointer}
+.vkladka[aria-selected="true"]{background:var(--akcent);color:var(--natemnom)}
+
+.ekran{padding:14px 16px 8px}
+.ekran h2{font-size:21px;font-weight:600;padding:0 4px}
+.ekran .pod{margin-top:6px;padding:0 4px;color:var(--tihiy);font-size:15px}
+
+/* Расчёт */
+.gruppa{margin-top:20px;background:var(--pod);border:1px solid var(--gran);border-radius:16px;overflow:hidden}
+.gruppa header{padding:14px 16px 10px}
+.gruppa h3{font-size:16px;font-weight:600}
+.gruppa header p{font-size:13px;color:var(--tihiy);margin-top:2px}
+.rabota{display:grid;grid-template-columns:24px 1fr auto;align-items:center;gap:12px;width:100%;min-height:52px;
+  padding:12px 16px;font:inherit;font-size:15px;text-align:left;color:var(--tekst);background:none;border:0;
+  border-top:1px solid var(--gran);cursor:pointer;transition:background-color .15s}
+.rabota:active{background:var(--pod2)}
+.galka{width:24px;height:24px;border-radius:7px;border:1.5px solid var(--gran2);display:grid;place-items:center;
+  transition:background-color .15s,border-color .15s}
+.galka svg{width:14px;height:14px;opacity:0;transform:scale(.6);transition:opacity .15s,transform .15s}
+.rabota[aria-pressed="true"] .galka{background:var(--akcent);border-color:var(--akcent)}
+.rabota[aria-pressed="true"] .galka svg{opacity:1;transform:none}
+.rabota .cena{color:var(--tihiy);font-size:15px}
+.rabota[aria-pressed="true"] .cena{color:var(--tekst)}
+.snoska{margin:16px 4px 0;font-size:13px;color:var(--tihiy)}
+
+/* Запись */
+.pole{margin-top:18px}
+.pole>label,.podpis-polya{display:block;font-size:14px;color:var(--tihiy);margin:0 4px 8px}
+.vvod{width:100%;font:inherit;font-size:16px;color:var(--tekst);background:var(--pod);border:1px solid var(--gran2);
+  border-radius:12px;padding:14px;min-height:52px;outline:none;transition:border-color .15s}
+.vvod::placeholder{color:var(--tihiy);opacity:.75}
+.vvod:focus{border-color:var(--akcent)}
+textarea.vvod{min-height:84px;resize:vertical}
+.dni{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:0 16px 2px}
+.dni::-webkit-scrollbar{display:none}
+.chip{flex:none;font:inherit;font-size:15px;color:var(--tekst);background:var(--pod);border:1px solid var(--gran2);
+  border-radius:12px;height:44px;padding:0 14px;cursor:pointer;transition:background-color .15s,border-color .15s}
+.chip[aria-pressed="true"]{background:var(--akcent);border-color:var(--akcent);color:var(--natemnom);font-weight:500}
+.chip:disabled{opacity:.35;cursor:default}
+.chasy{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.chasy .chip{padding:0}
+.zametka{margin:12px 4px 0;font-size:13px;color:var(--tihiy)}
+
+.krug{width:56px;height:56px;border-radius:50%;background:var(--akcent);display:grid;place-items:center;margin:8px 4px 16px}
+.krug svg{width:26px;height:26px}
+.blank{margin-top:16px;background:var(--pod);border:1px solid var(--gran);border-radius:16px;padding:4px 16px}
+.blank div{display:grid;grid-template-columns:104px 1fr;gap:12px;padding:12px 0;border-top:1px dashed var(--gran2);font-size:15px}
+.blank div:first-child{border-top:0}
+.blank dt{color:var(--tihiy)}
+.blank dd{overflow-wrap:anywhere}
+
+/* Вопросы */
+.vopros{margin-top:10px;background:var(--pod);border:1px solid var(--gran);border-radius:16px}
+.vopros:first-of-type{margin-top:18px}
+.vopros summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px;
+  min-height:56px;padding:14px 16px;font-weight:500;cursor:pointer}
+.vopros summary::-webkit-details-marker{display:none}
+.vopros summary::after{content:"";flex:none;width:8px;height:8px;margin-right:4px;border-right:2px solid var(--tihiy);
+  border-bottom:2px solid var(--tihiy);transform:translateY(-2px) rotate(45deg);transition:transform .15s}
+.vopros[open] summary::after{transform:translateY(2px) rotate(-135deg)}
+.otvet{padding:0 16px 16px;font-size:15px}
+.otvet a{color:var(--akcent);text-decoration:none}
+.otvet blockquote{margin-top:10px;padding-left:12px;border-left:2px solid var(--akcent)}
+.otvet .tiho{margin-top:8px;font-size:13px;color:var(--tihiy)}
+
+/* нижняя панель — предварительный заказ-наряд: зубчатый край, как у отрывного бланка */
+.naryad{position:fixed;left:0;right:0;bottom:0;z-index:10;padding:16px 16px calc(16px + env(safe-area-inset-bottom));
+  background:var(--pod2);display:flex;align-items:center;gap:14px}
+.naryad::before{content:"";position:absolute;left:0;right:0;top:-8px;height:8px;
+  background:radial-gradient(circle at 8px 0,transparent 6px,var(--pod2) 6.5px) 0 0/16px 8px repeat-x}
+.naryad::after{content:"";position:absolute;left:0;right:0;top:-40px;height:40px;z-index:-1;pointer-events:none;
+  background:linear-gradient(rgba(14,16,17,0),var(--fon) 70%)}
+.naryad .itog{flex:1;min-width:0}
+.naryad .metka{font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--tihiy)}
+.naryad .summa{font-size:24px;font-weight:600;line-height:1.2;margin-top:2px}
+.naryad .summa.pusto{font-size:15px;font-weight:400;color:var(--tihiy);white-space:normal}
+.knopka{flex:none;font:inherit;font-size:16px;font-weight:600;height:52px;padding:0 22px;border:0;border-radius:14px;
+  background:var(--akcent);color:var(--natemnom);cursor:pointer}
+.knopka:disabled{background:var(--gran);color:var(--tihiy);cursor:default}
+.v-telegram .naryad .knopka{display:none}
+
+.knopka:focus-visible,.vkladka:focus-visible,.rabota:focus-visible,.chip:focus-visible,.vopros summary:focus-visible{
+  outline:2px solid var(--akcent);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="plashka">Демонстрационный макет</div>
+
+<header class="shapka">
+  <h1 id="nazvanie"></h1>
+  <p class="rod" id="rod"></p>
+  <div class="fakty" id="fakty"></div>
+</header>
+
+<div class="verh">
+  <nav class="vkladki" role="tablist">
+    <button class="vkladka" role="tab" data-ekran="raschet" aria-selected="true">Расчёт</button>
+    <button class="vkladka" role="tab" data-ekran="zapis" aria-selected="false">Запись</button>
+    <button class="vkladka" role="tab" data-ekran="voprosy" aria-selected="false">Вопросы</button>
+  </nav>
+</div>
+
+<main>
+  <section class="ekran" id="raschet">
+    <h2>Что нужно сделать?</h2>
+    <p class="pod">Отметьте работы — посчитаем примерную сумму.</p>
+    <div id="gruppy"></div>
+    <p class="snoska" id="snoska"></p>
+  </section>
+
+  <section class="ekran" id="zapis" hidden>
+    <div id="forma">
+      <h2 id="zapis-zagolovok"></h2>
+      <p class="pod">Оставьте машину, удобное время и телефон.</p>
+      <div class="pole">
+        <label for="mashina">Марка, модель и год</label>
+        <input class="vvod" id="mashina" autocomplete="off" placeholder="Например, Kia Rio 2017">
+      </div>
+      <div class="pole">
+        <label for="chto">Что беспокоит или какая работа нужна</label>
+        <textarea class="vvod" id="chto" rows="3"></textarea>
+      </div>
+      <div class="pole">
+        <span class="podpis-polya">Когда удобно приехать</span>
+        <div class="dni" id="dni"></div>
+      </div>
+      <div class="pole" id="pole-chasy">
+        <div class="chasy" id="chasy"></div>
+        <p class="zametka">Время предварительное: автосервис перезвонит и подтвердит.</p>
+      </div>
+      <div class="pole">
+        <label for="telefon">Телефон</label>
+        <input class="vvod" id="telefon" type="tel" inputmode="tel" autocomplete="tel" placeholder="+7">
+      </div>
+    </div>
+    <div id="gotovo" hidden>
+      <div class="krug"><svg viewBox="0 0 14 14" fill="none"><path d="M2.5 7.5l3 3 6-7" stroke="#0E1011" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <h2>Заявка готова</h2>
+      <dl class="blank" id="blank"></dl>
+      <p class="zametka">Это демонстрация: заявка никуда не отправлена. В рабочей версии она сразу придёт мастеру в Telegram.</p>
+    </div>
+  </section>
+
+  <section class="ekran" id="voprosy" hidden>
+    <h2>Частые вопросы</h2>
+    <p class="pod">Ответы — по открытым данным карточки автосервиса.</p>
+    <div id="spisok-voprosov"></div>
+  </section>
+</main>
+
+<div class="naryad">
+  <div class="itog">
+    <div class="metka" id="metka">Заказ-наряд</div>
+    <div class="summa cifry pusto" id="summa">Отметьте работы выше</div>
+  </div>
+  <button class="knopka" id="knopka">Записаться</button>
+</div>
+
+<script>const D = {"slug": "vitamin", "nisha": "avtoservis", "nazvanie": "Витамин", "rod_zanyatiy": "автосервис", "telefon": "+7 910 127-36-36", "adres": "ул. Тимирязева, 27А", "chasy": "Ежедневно 09:00–20:00, по записи", "sekcii": [{"yakor": "uslugi", "menyu": "Цены"}, {"yakor": "kak", "menyu": "Как записаться"}, {"yakor": "otzyvy", "menyu": "Отзывы"}], "geroy": {"nadzag": "Автосервис на Тимирязева", "zagolovok": ["Ремонт, ТО и шиномонтаж", "в одном месте"], "lid": "Работаем [каждый день с 9 до 20, по записи]. Диагностика, двигатель и АКПП, ходовая, электрика, кузов и шины. Запчасти — в магазине комплекса, а пока ждёте — кафе.", "fakty": [["4,3", "рейтинг в 2ГИС, 105 оценок"], ["1 500 ₽", "компьютерная диагностика двигателя"], ["Ежедневно", "с 09:00 до 20:00, по записи"]], "panel": {"zagolovok": "Коротко", "stroki": [["Записаться", "звонок или WhatsApp"], ["Каждый день", "09:00–20:00"], ["Второй телефон", "+7 953 415-64-12"], ["Оплата", "наличные или перевод"]], "snoska": "Комплекс работает по предварительной записи: позвоните заранее, и машину возьмут в работу в назначенное время."}}, "uslugi": {"zagolovok": "Цены на частые работы", "podzagolovok": "Цены из прайса автосервиса. «От» — нижняя граница: итог зависит от машины и от того, что покажет осмотр.", "gruppy": [{"imya": "Диагностика и ТО", "podpis": "с этого обычно начинают", "punkty": [["Компьютерная диагностика двигателя", "", "1 500 ₽"], ["Диагностика подвески", "", "1 000 ₽"], ["Замена масла в двигателе", "", "1 500 ₽"], ["Замена масла в АКПП", "", "от 3 500 ₽"], ["Замена свечей зажигания", "", "от 1 000 ₽"], ["Промывка инжектора и форсунок", "", "от 2 000 ₽"]]}, {"imya": "Ходовая и колёса", "podpis": "тормоза, рулевое, шины", "punkty": [["Замена передних тормозных колодок", "", "от 1 500 ₽"], ["Развал-схождение 3D", "", "от 2 000 ₽"], ["Замена ШРУСа, наружного или внутреннего", "", "от 2 500 ₽"], ["Замена рулевого наконечника", "", "от 1 800 ₽"], ["Замена шаровой опоры", "", "от 1 800 ₽"], ["Шиномонтаж", "", "от 1 800 ₽"]]}, {"imya": "Двигатель, КПП, электрика", "podpis": "срок называет мастер после осмотра", "punkty": [["Капитальный ремонт двигателя", "", "от 50 000 ₽"], ["Ремонт ГБЦ", "", "от 15 000 ₽"], ["Ремонт АКПП", "", "от 20 000 ₽"], ["Ремонт генератора", "", "от 2 000 ₽"], ["Ремонт стартера", "", "от 2 000 ₽"], ["Ремонт электропроводки", "", "от 1 500 ₽"], ["Ремонт выхлопной системы", "", "от 1 500 ₽"], ["Сварочные работы", "", "от 1 000 ₽"]]}], "snoska": "Ещё в комплексе: кузовной ремонт и покраска, ремонт пневмоподвески, шумоизоляция, установка парктроников и камер. Цену на эти работы называют после осмотра.", "istochnik": "Цены — из прайса автосервиса «Витамин» в 2ГИС (обновлён 24 июля 2025 года), список работ — из карточки. Данные на 3 октября 2026 года."}, "kak_rabotaem": {"zagolovok": "Как записаться", "podzagolovok": "Комплекс работает по предварительной записи — так не приходится ждать в очереди.", "shagi": [["Звонок или WhatsApp", "Позвоните или напишите в WhatsApp — номер вверху страницы. Назовите марку машины и что беспокоит."], ["Удобное время", "Подбираем час под вас: работаем каждый день с 09:00 до 20:00 на улице Тимирязева, 27А."], ["Осмотр и сумма", "Мастер смотрит машину и говорит, что нужно сделать и сколько это стоит."], ["Пока ждёте", "В комплексе есть кафе и магазин запчастей: нужную деталь можно купить на месте."]]}, "reputaciya": {"zagolovok": "Что пишут в 2ГИС", "ocenka": "4,3", "podpis": "105 оценок в 2ГИС. Чаще всего отмечают: «Быстро и качественно», «Адекватные цены», «Отличный шиномонтаж», «Вежливый персонал».", "citaty": [["Мастер посмотрел, сказал, что менять не нужно. Отделался легкой заменой клемм. Честно сэкономили мне деньги", "Алексей К.", "генератор · 2ГИС, 18.02.2026"], ["…мастер сделал минут за 15, я даже не успела насладиться кофе в кафе", "Света Ф.", "замена колодок · 2ГИС, 31.01.2026"], ["Остановился на шиномонтаж, всё сделали быстро и качественно! Мастер Евгений профессионал своего дела!", "Александр", "шиномонтаж · 2ГИС, 11.08.2026"]], "istochnik": "Цитаты — дословно из опубликованных отзывов в 2ГИС, фамилии сокращены. Данные на 3 октября 2026 года."}, "zayavka": {"zagolovok": "Позвоните — подберём время", "lid": "Скажите марку машины и что беспокоит — назовём ближайшее свободное время. Можно написать в WhatsApp на этот же номер.", "pod": "Ежедневно 09:00–20:00 · ул. Тимирязева, 27А", "chto_napisat": ["Марка, модель и год машины", "Что беспокоит или какая работа нужна", "Когда вам удобно приехать"]}, "podval": {"opisanie": "Автосервисный комплекс на улице Тимирязева: диагностика и ТО, ремонт двигателя и АКПП, ходовая, электрика, кузов, шиномонтаж. Магазин запчастей и кафе. Работаем по записи.", "o_stranice": "Демонстрационный макет. Собран по открытым данным карточки и компании не принадлежит.", "niz_levo": "Автосервис «Витамин» · Нижний Новгород"}};</script>
+<script>
+const tg = window.Telegram && Telegram.WebApp;
+const vTelegram = Boolean(tg && tg.platform && tg.platform !== "unknown");
+if (vTelegram) {
+  document.body.classList.add("v-telegram");
+  tg.ready(); tg.expand();
+  tg.setHeaderColor("#0E1011"); tg.setBackgroundColor("#0E1011");
+}
+
+const $ = (id) => document.getElementById(id);
+const rubli = (n) => n.toLocaleString("ru-RU").replace(/\s/g, " ") + " ₽";
+const zaglavnaya = (s) => s[0].toUpperCase() + s.slice(1);
+const sklon = (n, [odna, dve, pyat]) => {
+  const d = n % 100, e = n % 10;
+  return d > 10 && d < 20 ? pyat : e === 1 ? odna : e > 1 && e < 5 ? dve : pyat;
+};
+const GALKA = '<svg viewBox="0 0 14 14" fill="none"><path d="M2.5 7.5l3 3 6-7" stroke="#0E1011" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+/* шапка */
+$("nazvanie").textContent = D.nazvanie;
+$("rod").textContent = zaglavnaya(D.rod_zanyatiy) + " · " + D.adres;
+const [ocenka, ocenkaPodpis] = D.geroy.fakty[0];
+$("fakty").innerHTML =
+  `<span class="fakt"><b>${ocenka}</b> ${ocenkaPodpis.replace("рейтинг в ", "в ")}</span>` +
+  `<span class="fakt">${D.chasy}</span>`;
+
+/* ---------- Расчёт: суммирует код, не модель ---------- */
+$("snoska").textContent = D.uslugi.podzagolovok.replace(/^Цены из прайса автосервиса\.\s*/, "") + " " + D.uslugi.istochnik;
+const vybrano = new Set();
+const raboty = [];
+$("gruppy").innerHTML = D.uslugi.gruppy.map((g) => {
+  const stroki = g.punkty.map(([imya, , cena]) => {
+    const i = raboty.push({ imya, cena: Number(cena.replace(/\D/g, "")), ot: cena.includes("от") }) - 1;
+    return `<button class="rabota" aria-pressed="false" data-i="${i}"><span class="galka">${GALKA}</span>` +
+      `<span>${imya}</span><span class="cena cifry">${cena.replace(/ (?=₽)/, " ")}</span></button>`;
+  }).join("");
+  return `<section class="gruppa"><header><h3>${g.imya}</h3><p>${g.podpis}</p></header>${stroki}</section>`;
+}).join("");
+
+function itog() {
+  const spisok = [...vybrano].map((i) => raboty[i]);
+  const summa = spisok.reduce((s, r) => s + r.cena, 0);
+  const tekst = spisok.length ? (spisok.some((r) => r.ot) ? "от " : "") + rubli(summa) : "";
+  return { spisok, tekst };
+}
+
+$("gruppy").addEventListener("click", (e) => {
+  const knopka = e.target.closest(".rabota");
+  if (!knopka) return;
+  const i = Number(knopka.dataset.i);
+  vybrano.has(i) ? vybrano.delete(i) : vybrano.add(i);
+  knopka.setAttribute("aria-pressed", vybrano.has(i));
+  if (forma.avtoChto) $("chto").value = itog().spisok.map((r) => r.imya).join(", ");
+  if (vTelegram) tg.HapticFeedback.selectionChanged();
+  obnovitNiz();
+});
+
+/* ---------- Запись: в демо заявка никуда не уходит ---------- */
+$("zapis-zagolovok").textContent = "Записаться в " + D.rod_zanyatiy;
+const forma = { den: null, chas: null, avtoChto: true, gotovo: false };
+const chasyRaboty = (D.chasy.match(/(\d{1,2}):\d{2}\s*[–-]\s*(\d{1,2}):\d{2}/) || []).slice(1).map(Number);
+const SLOTY = chasyRaboty.length === 2 && chasyRaboty[1] > chasyRaboty[0]
+  ? Array.from({ length: chasyRaboty[1] - chasyRaboty[0] }, (_, i) => chasyRaboty[0] + i) : [];
+const seychas = new Date();
+const DNI = Array.from({ length: 7 }, (_, i) => {
+  const d = new Date(seychas.getFullYear(), seychas.getMonth(), seychas.getDate() + i);
+  const kratko = zaglavnaya(d.toLocaleDateString("ru-RU", { weekday: "short" })) + " " +
+    d.toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit" });
+  return {
+    nazvanie: i === 0 ? "Сегодня" : i === 1 ? "Завтра" : kratko,
+    sloty: i === 0 ? SLOTY.filter((h) => h > seychas.getHours()) : SLOTY,
+  };
+});
+const chas = (h) => String(h).padStart(2, "0") + ":00";
+const kogda = () => DNI[forma.den].nazvanie + (forma.chas !== null ? ", " + chas(forma.chas) : "");
+
+function risovatDni() {
+  $("dni").innerHTML = DNI.map((d, i) =>
+    `<button class="chip" data-den="${i}" aria-pressed="${forma.den === i}"${SLOTY.length && !d.sloty.length ? " disabled" : ""}>${d.nazvanie}</button>`
+  ).join("");
+  $("pole-chasy").hidden = !SLOTY.length;
+  $("chasy").innerHTML = SLOTY.map((h) =>
+    `<button class="chip cifry" data-chas="${h}" aria-pressed="${forma.chas === h}"${DNI[forma.den].sloty.includes(h) ? "" : " disabled"}>${chas(h)}</button>`
+  ).join("");
+}
+forma.den = Math.max(0, DNI.findIndex((d) => !SLOTY.length || d.sloty.length));
+risovatDni();
+
+$("dni").addEventListener("click", (e) => {
+  const k = e.target.closest(".chip");
+  if (!k) return;
+  forma.den = Number(k.dataset.den);
+  if (!DNI[forma.den].sloty.includes(forma.chas)) forma.chas = null;
+  risovatDni(); obnovitNiz();
+});
+$("chasy").addEventListener("click", (e) => {
+  const k = e.target.closest(".chip");
+  if (!k) return;
+  forma.chas = Number(k.dataset.chas);
+  if (vTelegram) tg.HapticFeedback.selectionChanged();
+  risovatDni(); obnovitNiz();
+});
+$("mashina").addEventListener("input", obnovitNiz);
+$("telefon").addEventListener("input", obnovitNiz);
+$("chto").addEventListener("input", () => { forma.avtoChto = false; });
+
+function nedostayet() {
+  const net = [];
+  if ($("mashina").value.trim().length < 2) net.push("машина");
+  if (SLOTY.length && forma.chas === null) net.push("время");
+  const cifry = $("telefon").value.replace(/\D/g, "").length;
+  if (cifry < 10 || cifry > 12) net.push("телефон");
+  return net;
+}
+
+function otpravitZayavku() {
+  const { tekst } = itog();
+  const stroki = [
+    ["Машина", $("mashina").value.trim()],
+    ["Что сделать", $("chto").value.trim()],
+    ["Сумма", tekst && tekst + ", предварительно"],
+    ["Когда", kogda()],
+    ["Телефон", $("telefon").value.trim()],
+  ].filter(([, v]) => v);
+  $("blank").replaceChildren(...stroki.map(([k, v]) => {
+    const stroka = document.createElement("div");
+    const dt = document.createElement("dt"); dt.textContent = k;
+    const dd = document.createElement("dd"); dd.textContent = v;
+    stroka.append(dt, dd);
+    return stroka;
+  }));
+  forma.gotovo = true;
+  $("forma").hidden = true; $("gotovo").hidden = false;
+  if (vTelegram) tg.HapticFeedback.notificationOccurred("success");
+  podnyat(); obnovitNiz();
+}
+
+function zanovo() {
+  vybrano.clear();
+  document.querySelectorAll(".rabota").forEach((r) => r.setAttribute("aria-pressed", "false"));
+  ["mashina", "chto", "telefon"].forEach((id) => { $(id).value = ""; });
+  Object.assign(forma, { chas: null, avtoChto: true, gotovo: false });
+  $("forma").hidden = false; $("gotovo").hidden = true;
+  risovatDni(); otkryt("raschet");
+}
+
+/* ---------- Вопросы: только то, что есть в карточке ---------- */
+const panel = Object.fromEntries((D.geroy.panel && D.geroy.panel.stroki) || []);
+const telefony = [D.telefon, panel["Второй телефон"]].filter(Boolean)
+  .map((t) => `<a href="tel:${t.replace(/[^\d+]/g, "")}">${t}</a>`).join(", ");
+const otzyvy = D.reputaciya, citata = otzyvy && (otzyvy.citaty || [])[0];
+const VOPROSY = [
+  ["Когда вы работаете?", D.chasy],
+  ["Где вы находитесь?", D.adres],
+  ["Как с вами связаться?", telefony],
+  ["Нужно ли записываться заранее?", D.geroy.panel && D.geroy.panel.snoska],
+  ["Сколько стоит ремонт?", D.uslugi.podzagolovok + ' Примерную сумму можно посчитать во вкладке <a href="#" data-k="raschet">«Расчёт»</a>.'],
+  ["Что ещё вы делаете?", D.uslugi.snoska],
+  ["Как можно оплатить?", panel["Оплата"] && zaglavnaya(panel["Оплата"]) + "."],
+  ["Что о вас пишут?", otzyvy && `${otzyvy.ocenka} — ${otzyvy.podpis}` +
+    (citata ? `<blockquote>«${citata[0]}» — ${citata[1]}</blockquote>` : "") + `<p class="tiho">${otzyvy.istochnik}</p>`],
+].filter(([, otvet]) => otvet);
+$("spisok-voprosov").innerHTML = VOPROSY.map(([v, o]) =>
+  `<details class="vopros"><summary>${v}</summary><div class="otvet">${o}</div></details>`).join("");
+$("spisok-voprosov").addEventListener("click", (e) => {
+  const ssylka = e.target.closest("[data-k]");
+  if (ssylka) { e.preventDefault(); otkryt(ssylka.dataset.k); }
+});
+
+/* ---------- Вкладки и нижняя панель ---------- */
+let vkladka = "raschet";
+function podnyat() {
+  const verhVkladok = document.querySelector(".shapka").getBoundingClientRect().bottom + window.scrollY;
+  if (window.scrollY > verhVkladok) window.scrollTo(0, verhVkladok);
+}
+function otkryt(imya) {
+  vkladka = imya;
+  document.querySelectorAll(".vkladka").forEach((v) => v.setAttribute("aria-selected", v.dataset.ekran === imya));
+  document.querySelectorAll(".ekran").forEach((ekran) => { ekran.hidden = ekran.id !== imya; });
+  podnyat();
+  if (vTelegram) imya === "raschet" ? tg.BackButton.hide() : tg.BackButton.show();
+  obnovitNiz();
+}
+document.querySelector(".vkladki").addEventListener("click", (e) => {
+  const v = e.target.closest(".vkladka");
+  if (v) otkryt(v.dataset.ekran);
+});
+
+function obnovitNiz() {
+  const { spisok, tekst } = itog();
+  let metka, summa, pusto, knopka, aktivna = true;
+  if (vkladka === "zapis" && forma.gotovo) {
+    [metka, summa, pusto, knopka] = ["Заявка готова", kogda(), false, "Новая заявка"];
+  } else if (vkladka === "zapis") {
+    const net = nedostayet();
+    [metka, summa, pusto, knopka] = ["Заявка", net.length ? "Осталось: " + net.join(", ") : kogda(), net.length > 0, "Отправить"];
+    aktivna = !net.length;
+  } else if (vkladka === "voprosy") {
+    [metka, summa, pusto, knopka] = ["Запись", D.chasy.split(",")[0], true, "Записаться"];
+  } else {
+    metka = spisok.length ? `Предварительно · ${spisok.length} ${sklon(spisok.length, ["работа", "работы", "работ"])}` : "Заказ-наряд";
+    [summa, pusto, knopka] = [tekst || "Отметьте работы выше", !tekst, "Записаться"];
+  }
+  $("metka").textContent = metka;
+  $("summa").textContent = summa;
+  $("summa").classList.toggle("pusto", pusto);
+  $("knopka").textContent = knopka;
+  $("knopka").disabled = !aktivna;
+  if (vTelegram) {
+    tg.MainButton.setParams({
+      text: vkladka === "raschet" && tekst ? `${knopka} · ${tekst}` : knopka,
+      color: aktivna ? "#CBF24D" : "#2A2F31", text_color: aktivna ? "#0E1011" : "#8B9490",
+      is_active: aktivna, is_visible: true,
+    });
+  }
+}
+
+function deystvie() {
+  if (vkladka !== "zapis") return otkryt("zapis");
+  if (forma.gotovo) return zanovo();
+  if (!nedostayet().length) otpravitZayavku();
+}
+$("knopka").addEventListener("click", deystvie);
+if (vTelegram) {
+  tg.MainButton.onClick(deystvie);
+  tg.BackButton.onClick(() => otkryt("raschet"));
+}
+obnovitNiz();
+</script>
+</body>
+</html>
