@@ -77,6 +77,13 @@ textarea.vvod{min-height:84px;resize:vertical}
 .chasy{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .chasy .chip{padding:0}
 .zametka{margin:12px 4px 0;font-size:13px;color:var(--tihiy)}
+.zametka a{color:var(--akcent);text-decoration:none}
+.soglasie label{display:flex;gap:12px;align-items:flex-start;margin:0 4px;font-size:15px;color:var(--tekst);cursor:pointer}
+.soglasie input{flex:none;width:22px;height:22px;margin-top:1px;accent-color:var(--akcent)}
+.soglasie details{margin:10px 4px 0;font-size:13px;color:var(--tihiy)}
+.soglasie summary{cursor:pointer;color:var(--tekst);opacity:.8}
+.soglasie details p{margin-top:6px}
+.oshibka{margin:14px 4px 0;padding:12px 14px;border-radius:12px;background:rgba(255,107,91,.12);color:#FF8A7A;font-size:14px}
 
 .krug{width:56px;height:56px;border-radius:50%;background:var(--akcent);display:grid;place-items:center;margin:8px 4px 16px}
 .krug svg{width:26px;height:26px}
@@ -170,12 +177,22 @@ textarea.vvod{min-height:84px;resize:vertical}
         <label for="telefon">Телефон</label>
         <input class="vvod" id="telefon" type="tel" inputmode="tel" autocomplete="tel" placeholder="+7">
       </div>
+      <div class="pole soglasie">
+        <label><input type="checkbox" id="soglasie"><span>Даю согласие на обработку персональных данных</span></label>
+        <details>
+          <summary>Как обрабатываются данные</summary>
+          <p>Это демонстрационное приложение. Введённые данные нужны только чтобы показать, как заявка приходит
+            мастеру: они проходят через сервисы Google и Telegram (их серверы за рубежом) и приходят только вам
+            сообщением от бота. Мы их не сохраняем. Можно вводить вымышленные данные.</p>
+        </details>
+      </div>
+      <p class="oshibka" id="oshibka" hidden></p>
     </div>
     <div id="gotovo" hidden>
       <div class="krug"><svg viewBox="0 0 14 14" fill="none"><path d="M2.5 7.5l3 3 6-7" stroke="#0E1011" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-      <h2>Заявка готова</h2>
+      <h2 id="gotovo-zagolovok">Заявка готова</h2>
       <dl class="blank" id="blank"></dl>
-      <p class="zametka">Это демонстрация: заявка никуда не отправлена. В рабочей версии она сразу придёт мастеру в Telegram.</p>
+      <p class="zametka" id="gotovo-zametka"></p>
     </div>
   </section>
 
@@ -194,7 +211,7 @@ textarea.vvod{min-height:84px;resize:vertical}
   <button class="knopka" id="knopka">Записаться</button>
 </div>
 
-<script>const D = {"slug": "vitamin", "nisha": "avtoservis", "nazvanie": "Витамин", "rod_zanyatiy": "автосервис", "telefon": "+7 910 127-36-36", "adres": "ул. Тимирязева, 27А", "chasy": "Ежедневно 09:00–20:00, по записи", "sekcii": [{"yakor": "uslugi", "menyu": "Цены"}, {"yakor": "kak", "menyu": "Как записаться"}, {"yakor": "otzyvy", "menyu": "Отзывы"}], "geroy": {"nadzag": "Автосервис на Тимирязева", "zagolovok": ["Ремонт, ТО и шиномонтаж", "в одном месте"], "lid": "Работаем [каждый день с 9 до 20, по записи]. Диагностика, двигатель и АКПП, ходовая, электрика, кузов и шины. Запчасти — в магазине комплекса, а пока ждёте — кафе.", "fakty": [["4,3", "рейтинг в 2ГИС, 105 оценок"], ["1 500 ₽", "компьютерная диагностика двигателя"], ["Ежедневно", "с 09:00 до 20:00, по записи"]], "panel": {"zagolovok": "Коротко", "stroki": [["Записаться", "звонок или WhatsApp"], ["Каждый день", "09:00–20:00"], ["Второй телефон", "+7 953 415-64-12"], ["Оплата", "наличные или перевод"]], "snoska": "Комплекс работает по предварительной записи: позвоните заранее, и машину возьмут в работу в назначенное время."}}, "uslugi": {"zagolovok": "Цены на частые работы", "podzagolovok": "Цены из прайса автосервиса. «От» — нижняя граница: итог зависит от машины и от того, что покажет осмотр.", "gruppy": [{"imya": "Диагностика и ТО", "podpis": "с этого обычно начинают", "punkty": [["Компьютерная диагностика двигателя", "", "1 500 ₽"], ["Диагностика подвески", "", "1 000 ₽"], ["Замена масла в двигателе", "", "1 500 ₽"], ["Замена масла в АКПП", "", "от 3 500 ₽"], ["Замена свечей зажигания", "", "от 1 000 ₽"], ["Промывка инжектора и форсунок", "", "от 2 000 ₽"]]}, {"imya": "Ходовая и колёса", "podpis": "тормоза, рулевое, шины", "punkty": [["Замена передних тормозных колодок", "", "от 1 500 ₽"], ["Развал-схождение 3D", "", "от 2 000 ₽"], ["Замена ШРУСа, наружного или внутреннего", "", "от 2 500 ₽"], ["Замена рулевого наконечника", "", "от 1 800 ₽"], ["Замена шаровой опоры", "", "от 1 800 ₽"], ["Шиномонтаж", "", "от 1 800 ₽"]]}, {"imya": "Двигатель, КПП, электрика", "podpis": "срок называет мастер после осмотра", "punkty": [["Капитальный ремонт двигателя", "", "от 50 000 ₽"], ["Ремонт ГБЦ", "", "от 15 000 ₽"], ["Ремонт АКПП", "", "от 20 000 ₽"], ["Ремонт генератора", "", "от 2 000 ₽"], ["Ремонт стартера", "", "от 2 000 ₽"], ["Ремонт электропроводки", "", "от 1 500 ₽"], ["Ремонт выхлопной системы", "", "от 1 500 ₽"], ["Сварочные работы", "", "от 1 000 ₽"]]}], "snoska": "Ещё в комплексе: кузовной ремонт и покраска, ремонт пневмоподвески, шумоизоляция, установка парктроников и камер. Цену на эти работы называют после осмотра.", "istochnik": "Цены — из прайса автосервиса «Витамин» в 2ГИС (обновлён 24 июля 2025 года), список работ — из карточки. Данные на 3 октября 2026 года."}, "kak_rabotaem": {"zagolovok": "Как записаться", "podzagolovok": "Комплекс работает по предварительной записи — так не приходится ждать в очереди.", "shagi": [["Звонок или WhatsApp", "Позвоните или напишите в WhatsApp — номер вверху страницы. Назовите марку машины и что беспокоит."], ["Удобное время", "Подбираем час под вас: работаем каждый день с 09:00 до 20:00 на улице Тимирязева, 27А."], ["Осмотр и сумма", "Мастер смотрит машину и говорит, что нужно сделать и сколько это стоит."], ["Пока ждёте", "В комплексе есть кафе и магазин запчастей: нужную деталь можно купить на месте."]]}, "reputaciya": {"zagolovok": "Что пишут в 2ГИС", "ocenka": "4,3", "podpis": "105 оценок в 2ГИС. Чаще всего отмечают: «Быстро и качественно», «Адекватные цены», «Отличный шиномонтаж», «Вежливый персонал».", "citaty": [["Мастер посмотрел, сказал, что менять не нужно. Отделался легкой заменой клемм. Честно сэкономили мне деньги", "Алексей К.", "генератор · 2ГИС, 18.02.2026"], ["…мастер сделал минут за 15, я даже не успела насладиться кофе в кафе", "Света Ф.", "замена колодок · 2ГИС, 31.01.2026"], ["Остановился на шиномонтаж, всё сделали быстро и качественно! Мастер Евгений профессионал своего дела!", "Александр", "шиномонтаж · 2ГИС, 11.08.2026"]], "istochnik": "Цитаты — дословно из опубликованных отзывов в 2ГИС, фамилии сокращены. Данные на 3 октября 2026 года."}, "zayavka": {"zagolovok": "Позвоните — подберём время", "lid": "Скажите марку машины и что беспокоит — назовём ближайшее свободное время. Можно написать в WhatsApp на этот же номер.", "pod": "Ежедневно 09:00–20:00 · ул. Тимирязева, 27А", "chto_napisat": ["Марка, модель и год машины", "Что беспокоит или какая работа нужна", "Когда вам удобно приехать"]}, "podval": {"opisanie": "Автосервисный комплекс на улице Тимирязева: диагностика и ТО, ремонт двигателя и АКПП, ходовая, электрика, кузов, шиномонтаж. Магазин запчастей и кафе. Работаем по записи.", "o_stranice": "Демонстрационный макет. Собран по открытым данным карточки и компании не принадлежит.", "niz_levo": "Автосервис «Витамин» · Нижний Новгород"}};</script>
+<script>const D = {"slug": "vitamin", "nisha": "avtoservis", "nazvanie": "Витамин", "rod_zanyatiy": "автосервис", "telefon": "+7 910 127-36-36", "adres": "ул. Тимирязева, 27А", "chasy": "Ежедневно 09:00–20:00, по записи", "sekcii": [{"yakor": "uslugi", "menyu": "Цены"}, {"yakor": "kak", "menyu": "Как записаться"}, {"yakor": "otzyvy", "menyu": "Отзывы"}], "geroy": {"nadzag": "Автосервис на Тимирязева", "zagolovok": ["Ремонт, ТО и шиномонтаж", "в одном месте"], "lid": "Работаем [каждый день с 9 до 20, по записи]. Диагностика, двигатель и АКПП, ходовая, электрика, кузов и шины. Запчасти — в магазине комплекса, а пока ждёте — кафе.", "fakty": [["4,3", "рейтинг в 2ГИС, 105 оценок"], ["1 500 ₽", "компьютерная диагностика двигателя"], ["Ежедневно", "с 09:00 до 20:00, по записи"]], "panel": {"zagolovok": "Коротко", "stroki": [["Записаться", "звонок или WhatsApp"], ["Каждый день", "09:00–20:00"], ["Второй телефон", "+7 953 415-64-12"], ["Оплата", "наличные или перевод"]], "snoska": "Комплекс работает по предварительной записи: позвоните заранее, и машину возьмут в работу в назначенное время."}}, "uslugi": {"zagolovok": "Цены на частые работы", "podzagolovok": "Цены из прайса автосервиса. «От» — нижняя граница: итог зависит от машины и от того, что покажет осмотр.", "gruppy": [{"imya": "Диагностика и ТО", "podpis": "с этого обычно начинают", "punkty": [["Компьютерная диагностика двигателя", "", "1 500 ₽"], ["Диагностика подвески", "", "1 000 ₽"], ["Замена масла в двигателе", "", "1 500 ₽"], ["Замена масла в АКПП", "", "от 3 500 ₽"], ["Замена свечей зажигания", "", "от 1 000 ₽"], ["Промывка инжектора и форсунок", "", "от 2 000 ₽"]]}, {"imya": "Ходовая и колёса", "podpis": "тормоза, рулевое, шины", "punkty": [["Замена передних тормозных колодок", "", "от 1 500 ₽"], ["Развал-схождение 3D", "", "от 2 000 ₽"], ["Замена ШРУСа, наружного или внутреннего", "", "от 2 500 ₽"], ["Замена рулевого наконечника", "", "от 1 800 ₽"], ["Замена шаровой опоры", "", "от 1 800 ₽"], ["Шиномонтаж", "", "от 1 800 ₽"]]}, {"imya": "Двигатель, КПП, электрика", "podpis": "срок называет мастер после осмотра", "punkty": [["Капитальный ремонт двигателя", "", "от 50 000 ₽"], ["Ремонт ГБЦ", "", "от 15 000 ₽"], ["Ремонт АКПП", "", "от 20 000 ₽"], ["Ремонт генератора", "", "от 2 000 ₽"], ["Ремонт стартера", "", "от 2 000 ₽"], ["Ремонт электропроводки", "", "от 1 500 ₽"], ["Ремонт выхлопной системы", "", "от 1 500 ₽"], ["Сварочные работы", "", "от 1 000 ₽"]]}], "snoska": "Ещё в комплексе: кузовной ремонт и покраска, ремонт пневмоподвески, шумоизоляция, установка парктроников и камер. Цену на эти работы называют после осмотра.", "istochnik": "Цены — из прайса автосервиса «Витамин» в 2ГИС (обновлён 24 июля 2025 года), список работ — из карточки. Данные на 3 октября 2026 года."}, "kak_rabotaem": {"zagolovok": "Как записаться", "podzagolovok": "Комплекс работает по предварительной записи — так не приходится ждать в очереди.", "shagi": [["Звонок или WhatsApp", "Позвоните или напишите в WhatsApp — номер вверху страницы. Назовите марку машины и что беспокоит."], ["Удобное время", "Подбираем час под вас: работаем каждый день с 09:00 до 20:00 на улице Тимирязева, 27А."], ["Осмотр и сумма", "Мастер смотрит машину и говорит, что нужно сделать и сколько это стоит."], ["Пока ждёте", "В комплексе есть кафе и магазин запчастей: нужную деталь можно купить на месте."]]}, "reputaciya": {"zagolovok": "Что пишут в 2ГИС", "ocenka": "4,3", "podpis": "105 оценок в 2ГИС. Чаще всего отмечают: «Быстро и качественно», «Адекватные цены», «Отличный шиномонтаж», «Вежливый персонал».", "citaty": [["Мастер посмотрел, сказал, что менять не нужно. Отделался легкой заменой клемм. Честно сэкономили мне деньги", "Алексей К.", "генератор · 2ГИС, 18.02.2026"], ["…мастер сделал минут за 15, я даже не успела насладиться кофе в кафе", "Света Ф.", "замена колодок · 2ГИС, 31.01.2026"], ["Остановился на шиномонтаж, всё сделали быстро и качественно! Мастер Евгений профессионал своего дела!", "Александр", "шиномонтаж · 2ГИС, 11.08.2026"]], "istochnik": "Цитаты — дословно из опубликованных отзывов в 2ГИС, фамилии сокращены. Данные на 3 октября 2026 года."}, "zayavka": {"zagolovok": "Позвоните — подберём время", "lid": "Скажите марку машины и что беспокоит — назовём ближайшее свободное время. Можно написать в WhatsApp на этот же номер.", "pod": "Ежедневно 09:00–20:00 · ул. Тимирязева, 27А", "chto_napisat": ["Марка, модель и год машины", "Что беспокоит или какая работа нужна", "Когда вам удобно приехать"]}, "podval": {"opisanie": "Автосервисный комплекс на улице Тимирязева: диагностика и ТО, ремонт двигателя и АКПП, ходовая, электрика, кузов, шиномонтаж. Магазин запчастей и кафе. Работаем по записи.", "o_stranice": "Демонстрационный макет. Собран по открытым данным карточки и компании не принадлежит.", "niz_levo": "Автосервис «Витамин» · Нижний Новгород"}}; const PRIYOMNIK = {"url": "https://script.google.com/macros/s/AKfycbzr1dCOpz9qxkR5bA0PIKjFohinBNmL6MyP6jzBTub5xItQg-gkWctJxRtpyo9ouQZ74g/exec", "bot": "magaz52bot"};</script>
 <script>
 const tg = window.Telegram && Telegram.WebApp;
 const vTelegram = Boolean(tg && tg.platform && tg.platform !== "unknown");
@@ -254,7 +271,7 @@ $("gruppy").addEventListener("click", (e) => {
 
 /* ---------- Запись: в демо заявка никуда не уходит ---------- */
 $("zapis-zagolovok").textContent = "Записаться в " + D.rod_zanyatiy;
-const forma = { den: null, chas: null, avtoChto: true, gotovo: false };
+const forma = { den: null, chas: null, avtoChto: true, gotovo: false, otpravka: false };
 const chasyRaboty = (D.chasy.match(/(\d{1,2}):\d{2}\s*[–-]\s*(\d{1,2}):\d{2}/) || []).slice(1).map(Number);
 const SLOTY = chasyRaboty.length === 2 && chasyRaboty[1] > chasyRaboty[0]
   ? Array.from({ length: chasyRaboty[1] - chasyRaboty[0] }, (_, i) => chasyRaboty[0] + i) : [];
@@ -265,11 +282,14 @@ const DNI = Array.from({ length: 7 }, (_, i) => {
     d.toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit" });
   return {
     nazvanie: i === 0 ? "Сегодня" : i === 1 ? "Завтра" : kratko,
+    kratko,
     sloty: i === 0 ? SLOTY.filter((h) => h > seychas.getHours()) : SLOTY,
   };
 });
 const chas = (h) => String(h).padStart(2, "0") + ":00";
 const kogda = () => DNI[forma.den].nazvanie + (forma.chas !== null ? ", " + chas(forma.chas) : "");
+/* мастеру «завтра» ни о чём не скажет — в заявку уходит дата */
+const kogdaDlyaMastera = () => DNI[forma.den].kratko + (forma.chas !== null ? ", " + chas(forma.chas) : "");
 
 function risovatDni() {
   $("dni").innerHTML = DNI.map((d, i) =>
@@ -300,6 +320,7 @@ $("chasy").addEventListener("click", (e) => {
 $("mashina").addEventListener("input", obnovitNiz);
 $("telefon").addEventListener("input", obnovitNiz);
 $("chto").addEventListener("input", () => { forma.avtoChto = false; });
+$("soglasie").addEventListener("change", obnovitNiz);
 
 function nedostayet() {
   const net = [];
@@ -307,17 +328,57 @@ function nedostayet() {
   if (SLOTY.length && forma.chas === null) net.push("время");
   const cifry = $("telefon").value.replace(/\D/g, "").length;
   if (cifry < 10 || cifry > 12) net.push("телефон");
+  if (!$("soglasie").checked) net.push("согласие");
   return net;
 }
 
-function otpravitZayavku() {
+/* в Telegram с приёмником — настоящая отправка: заявка приходит сообщением от бота */
+const mozhnoOtpravit = () => Boolean(vTelegram && PRIYOMNIK && PRIYOMNIK.url && tg.initData);
+const PRICHINY = {
+  podpis: "Telegram не подтвердил, что заявка от вас. Закройте приложение и откройте его из бота заново.",
+  chasto: "Слишком много заявок подряд. Попробуйте через 10 минут.",
+  pusto: "Не хватает машины, времени или телефона.",
+};
+
+async function otpravitZayavku() {
   const { tekst } = itog();
+  const zayavka = {
+    biznes: D.nazvanie,
+    mashina: $("mashina").value.trim(),
+    chto: $("chto").value.trim(),
+    summa: tekst,
+    kogda: kogdaDlyaMastera(),
+    telefon: $("telefon").value.trim(),
+  };
+  $("oshibka").hidden = true;
+  if (!mozhnoOtpravit()) return pokazatGotovo(zayavka, false);
+  forma.otpravka = true; obnovitNiz();
+  if (vTelegram) tg.MainButton.showProgress();
+  try {
+    const otvet = await fetch(PRIYOMNIK.url, { method: "POST", body: JSON.stringify({ initData: tg.initData, zayavka }) });
+    const dannye = await otvet.json();
+    if (!dannye.ok) throw new Error(PRICHINY[dannye.oshibka] || "Приёмник заявок не ответил. Попробуйте ещё раз.");
+    pokazatGotovo(zayavka, true);
+  } catch (oshibka) {
+    // TypeError — сеть (у браузеров разный текст), SyntaxError — пришёл не JSON; свои ошибки — с понятным текстом
+    $("oshibka").textContent = oshibka instanceof TypeError || oshibka instanceof SyntaxError
+      ? "Нет связи с приёмником заявок. Проверьте интернет и попробуйте ещё раз." : oshibka.message;
+    $("oshibka").hidden = false;
+    if (vTelegram) tg.HapticFeedback.notificationOccurred("error");
+  } finally {
+    forma.otpravka = false;
+    if (vTelegram) tg.MainButton.hideProgress();
+    obnovitNiz();
+  }
+}
+
+function pokazatGotovo(zayavka, otpravleno) {
   const stroki = [
-    ["Машина", $("mashina").value.trim()],
-    ["Что сделать", $("chto").value.trim()],
-    ["Сумма", tekst && tekst + ", предварительно"],
+    ["Машина", zayavka.mashina],
+    ["Что сделать", zayavka.chto],
+    ["Сумма", zayavka.summa && zayavka.summa + ", предварительно"],
     ["Когда", kogda()],
-    ["Телефон", $("telefon").value.trim()],
+    ["Телефон", zayavka.telefon],
   ].filter(([, v]) => v);
   $("blank").replaceChildren(...stroki.map(([k, v]) => {
     const stroka = document.createElement("div");
@@ -326,6 +387,16 @@ function otpravitZayavku() {
     stroka.append(dt, dd);
     return stroka;
   }));
+  $("gotovo-zagolovok").textContent = otpravleno ? "Заявка отправлена" : "Заявка готова";
+  const zametka = $("gotovo-zametka");
+  if (otpravleno) {
+    zametka.textContent = "Посмотрите сообщение от бота — так заявку получит мастер. Демо ничего не сохраняет.";
+  } else if (PRIYOMNIK && PRIYOMNIK.bot) {
+    zametka.innerHTML = "Это демонстрация: отсюда заявка не отправляется. Откройте приложение в Telegram — " +
+      `<a href="https://t.me/${PRIYOMNIK.bot}">@${PRIYOMNIK.bot}</a>, и заявка придёт вам сообщением, как мастеру.`;
+  } else {
+    zametka.textContent = "Это демонстрация: заявка никуда не отправлена. В рабочей версии она сразу придёт мастеру в Telegram.";
+  }
   forma.gotovo = true;
   $("forma").hidden = true; $("gotovo").hidden = false;
   if (vTelegram) tg.HapticFeedback.notificationOccurred("success");
@@ -336,7 +407,9 @@ function zanovo() {
   vybrano.clear();
   document.querySelectorAll(".rabota").forEach((r) => r.setAttribute("aria-pressed", "false"));
   ["mashina", "chto", "telefon"].forEach((id) => { $(id).value = ""; });
-  Object.assign(forma, { chas: null, avtoChto: true, gotovo: false });
+  $("soglasie").checked = false;
+  $("oshibka").hidden = true;
+  Object.assign(forma, { chas: null, avtoChto: true, gotovo: false, otpravka: false });
   $("forma").hidden = false; $("gotovo").hidden = true;
   risovatDni(); otkryt("raschet");
 }
@@ -388,6 +461,8 @@ function obnovitNiz() {
   let metka, summa, pusto, knopka, aktivna = true;
   if (vkladka === "zapis" && forma.gotovo) {
     [metka, summa, pusto, knopka] = ["Заявка готова", kogda(), false, "Новая заявка"];
+  } else if (vkladka === "zapis" && forma.otpravka) {
+    [metka, summa, pusto, knopka, aktivna] = ["Заявка", kogda(), false, "Отправляем…", false];
   } else if (vkladka === "zapis") {
     const net = nedostayet();
     [metka, summa, pusto, knopka] = ["Заявка", net.length ? "Осталось: " + net.join(", ") : kogda(), net.length > 0, "Отправить"];
@@ -414,6 +489,7 @@ function obnovitNiz() {
 
 function deystvie() {
   if (vkladka !== "zapis") return otkryt("zapis");
+  if (forma.otpravka) return;
   if (forma.gotovo) return zanovo();
   if (!nedostayet().length) otpravitZayavku();
 }
