@@ -7,115 +7,145 @@
 <title>Тюряга — пульт бота</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-/* Пульт бота «Тюряга». Страница — пустой шаблон: данные приходят только во фрагменте ссылки (#…),
-   который бот ставит на кнопку в своём чате. На сервер фрагмент не уходит. Цвета — из темы Telegram. */
+/* Пульт бота «Тюряга» в стиле игры. Картинки и шрифт — с сервера игры по ссылкам (CORS открыт), в репозиторий
+   не копируются. Страница — пустой шаблон: данные приходят только во фрагменте ссылки (#…), на сервер не уходят. */
+@font-face{font-family:"PrisonFont";src:url("https://oldprison-prod-assets-cdn-yandex.luckygem.online/assets/fonts/PrisonFont.woff") format("woff");font-display:swap}
 :root{
-  --fon:var(--tg-theme-secondary-bg-color,#f1f1f4); --karta:var(--tg-theme-section-bg-color,var(--tg-theme-bg-color,#fff));
-  --tekst:var(--tg-theme-text-color,#111); --tihiy:var(--tg-theme-hint-color,#8a8a90);
-  --akcent:var(--tg-theme-button-color,#2f80ed); --naakcente:var(--tg-theme-button-text-color,#fff);
-  --zag:var(--tg-theme-section-header-text-color,var(--tihiy)); --opasno:var(--tg-theme-destructive-text-color,#e5484d);
-  --gran:color-mix(in srgb,var(--tekst) 9%,transparent);
+  --cdn:"https://oldprison-prod-assets-cdn-yandex.luckygem.online/assets";
+  --noch:#0d0b09; --kozha:#2b1f17; --kozha2:#3a2a1f; --krem:#f1e6cf; --chernila:#2a2119; --karandash:#6b5d4f;
+  --oranzh:#e8772a; --zhelt:#f2d21c; --krov:#c8322c; --zelen:#3f8f3a;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 [hidden]{display:none!important}
-html,body{background:var(--fon);color:var(--tekst)}
-body{font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased;
-  padding:12px 16px calc(24px + env(safe-area-inset-bottom));-webkit-tap-highlight-color:transparent}
+html{background:var(--noch)}
+body{min-height:100vh;color:var(--krem);font:15px/1.4 Calibri,"Segoe UI",system-ui,-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;
+  padding:12px 14px calc(28px + env(safe-area-inset-bottom));
+  background:linear-gradient(rgba(10,8,6,.55),rgba(10,8,6,.8)),
+    url("https://oldprison-prod-assets-cdn-yandex.luckygem.online/assets/PrisonV3/backV2.webp") center top/cover fixed var(--noch)}
+.zek{font-family:"PrisonFont",Impact,"Arial Black",sans-serif;letter-spacing:.02em;text-transform:uppercase}
 .cifra{font-variant-numeric:tabular-nums;white-space:nowrap}
-.shapka{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:4px 4px 12px}
-.shapka h1{font-size:22px;font-weight:700;letter-spacing:-.01em}
-.rezhim{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;padding:5px 10px;border-radius:999px;
-  background:color-mix(in srgb,#2fb36b 16%,transparent);color:#1f8f52}
-.rezhim::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
-.rezhim.pauza{background:color-mix(in srgb,var(--opasno) 14%,transparent);color:var(--opasno)}
-.obnovleno{font-size:12px;color:var(--tihiy);padding:0 4px 10px}
-.zag{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--zag);padding:14px 4px 6px}
-.karta{background:var(--karta);border-radius:14px;padding:14px 16px}
+
+/* шапка — доска */
+.shapka{position:relative;display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:18px 22px 16px;border-radius:6px;box-shadow:0 6px 18px rgba(0,0,0,.55);
+  background:url("https://oldprison-prod-assets-cdn-yandex.luckygem.online/assets/offers/limited/board.webp") center/cover}
+.shapka h1{font-size:34px;line-height:1;color:var(--krem);text-shadow:0 2px 0 #1b130d,0 0 12px rgba(0,0,0,.6)}
+.shtamp{font-size:13px;padding:5px 10px;border:2.5px solid currentColor;border-radius:4px;transform:rotate(-6deg);
+  color:#d9f0c9;background:rgba(40,85,35,.55);box-shadow:0 0 0 1px rgba(0,0,0,.25) inset}
+.shtamp.pauza{color:#ffd9d4;background:rgba(150,30,25,.6)}
+.obnovleno{font-size:12px;color:#bfae93;padding:8px 4px 2px;text-shadow:0 1px 2px #000}
+
+/* бирка раздела — как оранжевые надписи на панели игры */
+.zag{display:inline-block;margin:16px 0 6px 2px;padding:3px 10px 2px;font-size:14px;color:#1d140d;
+  background:var(--oranzh);border-radius:3px;box-shadow:0 2px 0 #8c4314}
+
+/* листок в клетку */
+.list{position:relative;color:var(--chernila);padding:16px 18px 14px;
+  background:url("https://oldprison-prod-assets-cdn-yandex.luckygem.online/assets/PrisonV3/All/RulesModal.webp") center/100% 100% no-repeat;
+  filter:drop-shadow(0 5px 10px rgba(0,0,0,.5))}
 .ryad{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
 .ryad+.ryad{margin-top:8px}
-.bolshoe{font-size:28px;font-weight:700;letter-spacing:-.01em}
-.podpis{font-size:13px;color:var(--tihiy)}
-.polosa{height:8px;border-radius:999px;background:var(--gran);overflow:hidden;margin-top:10px}
-.polosa i{display:block;height:100%;border-radius:inherit;background:var(--akcent);transition:width .4s ease}
-.polosa.zdorove i{background:var(--opasno)}
-.spisok{list-style:none}
-.spisok li{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-top:1px solid var(--gran)}
-.spisok li:first-child{border-top:0;padding-top:2px}
+.bolshoe{font-size:30px;line-height:1.05;color:#231a12}
+.podpis{font-size:13.5px;color:var(--karandash)}
+.polosa{height:12px;margin-top:10px;border-radius:3px;overflow:hidden;background:#3a2c21;box-shadow:0 1px 0 rgba(255,255,255,.35),inset 0 1px 3px rgba(0,0,0,.6)}
+.polosa i{display:block;height:100%;transition:width .5s ease;
+  background:url("https://oldprison-prod-assets-cdn-yandex.luckygem.online/assets/common/btnLevelUpActiv.png") center/100% 100%}
+.polosa.zdorove i{background:linear-gradient(#e24a3f,#9e211c)}
+.spisok{list-style:none;margin-top:10px}
+.spisok li{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-top:1px dashed rgba(60,45,30,.35)}
 .spisok .imya{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.spisok .zn{color:var(--tihiy)}
-.resursy{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
-.resurs{background:var(--karta);border-radius:14px;padding:12px 14px}
-.resurs b{display:block;font-size:20px;font-weight:700}
+.spisok .zn{color:var(--karandash)}
+
+/* босс — на фоне ростовой линейки */
+.boss{display:grid;grid-template-columns:76px 1fr;gap:14px;align-items:center}
+.lineyka{width:76px;height:86px;border-radius:3px;display:grid;place-items:end center;padding-bottom:8px;
+  background:url("https://oldprison-prod-assets-cdn-yandex.luckygem.online/assets/PrisonV3/bosses/avatarbgBoss/bgAvatarBoss1.png") center/cover;
+  box-shadow:0 2px 6px rgba(0,0,0,.35)}
+.lineyka b{font-size:11px;color:#fff;background:#1d140d;padding:1px 5px;border-radius:2px}
+
+/* запасы — тёмные кожаные плашки с иконками, как верхняя панель игры */
+.zapasy{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.zapas{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:6px;
+  background:linear-gradient(var(--kozha2),var(--kozha));border:1px solid #4d382a;box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 3px 8px rgba(0,0,0,.45)}
+.zapas img{width:30px;height:30px;object-fit:contain;flex:none}
+.zapas span{display:block;font-size:12px;color:#c6b08f}
+.zapas b{font-size:19px;color:var(--krem)}
 .dela{list-style:none}
-.dela li{padding:8px 0;border-top:1px solid var(--gran);font-size:14px}
+.dela li{padding:6px 0;border-top:1px dashed rgba(60,45,30,.35);font-size:14px}
 .dela li:first-child{border-top:0;padding-top:0}
-.pult{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
-.pult button{font:inherit;font-size:15px;font-weight:600;height:46px;border:0;border-radius:12px;cursor:pointer;
-  background:var(--karta);color:var(--tekst)}
-.pult button.glavnaya{grid-column:1/-1;background:var(--akcent);color:var(--naakcente)}
-.pult button:active{opacity:.75}
-.zametka{font-size:13px;color:var(--tihiy);padding:10px 4px 0}
-.pusto{padding:40px 8px;text-align:center;color:var(--tihiy)}
+
+/* пульт — жёлтые кнопки игры */
+.pult{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}
+.pult button{font-family:"PrisonFont",Impact,sans-serif;text-transform:uppercase;font-size:15px;letter-spacing:.02em;
+  height:48px;border:2px solid #1b130d;border-radius:5px;cursor:pointer;color:#1b130d;
+  background:linear-gradient(#ffe45a,var(--zhelt) 55%,#d9b40e);box-shadow:0 3px 0 #1b130d}
+.pult button.glavnaya{grid-column:1/-1}
+.pult button:active{transform:translateY(2px);box-shadow:0 1px 0 #1b130d}
+.zametka{font-size:12.5px;color:#bfae93;padding:10px 4px 0;text-shadow:0 1px 2px #000}
+.pusto{margin-top:24px;padding:28px 18px;text-align:center}
 </style>
 </head>
 <body>
 <header class="shapka">
-  <h1>Тюряга</h1>
-  <span id="rezhim" class="rezhim">работает</span>
+  <h1 class="zek">Тюряга</h1>
+  <span id="rezhim" class="shtamp zek">работает</span>
 </header>
 <p id="obnovleno" class="obnovleno"></p>
 
 <main id="vse" hidden>
-  <h2 class="zag">Уровень</h2>
-  <section class="karta">
-    <div class="ryad"><span class="bolshoe cifra" id="uroven"></span><span class="podpis cifra" id="avt"></span></div>
+  <h2 class="zag zek">Уровень</h2>
+  <section class="list">
+    <div class="ryad"><span class="bolshoe zek cifra" id="uroven"></span><span class="podpis cifra" id="avt"></span></div>
     <div class="polosa" aria-hidden="true"><i id="polosaUr"></i></div>
     <div class="ryad"><span class="podpis" id="doUr"></span><span class="podpis cifra" id="talanty"></span></div>
   </section>
 
-  <h2 class="zag">Босс</h2>
-  <section class="karta" id="bossKarta">
-    <div class="ryad"><span class="bolshoe" id="bossImya"></span><span class="podpis cifra" id="bossDo"></span></div>
+  <h2 class="zag zek">Босс</h2>
+  <section class="list" id="bossKarta">
+    <div class="boss"><div class="lineyka"><b class="zek" id="bossNomer">№?</b></div><div>
+    <div class="ryad"><span class="bolshoe zek" id="bossImya"></span><span class="podpis cifra" id="bossDo"></span></div>
     <div class="polosa zdorove" aria-hidden="true"><i id="polosaBoss"></i></div>
     <div class="ryad"><span class="podpis cifra" id="bossHp"></span><span class="podpis cifra" id="bossUbito"></span></div>
-    <ul class="spisok" id="uronDruzey" style="margin-top:10px"></ul>
+    </div></div>
+    <ul class="spisok" id="uronDruzey"></ul>
   </section>
 
-  <h2 class="zag">Друзья</h2>
-  <section class="karta">
-    <div class="ryad"><span class="bolshoe cifra" id="druzey"></span><span class="podpis cifra" id="zayavki"></span></div>
-    <ul class="spisok" id="topDruzey" style="margin-top:10px"></ul>
+  <h2 class="zag zek">Друзья</h2>
+  <section class="list">
+    <div class="ryad"><span class="bolshoe zek cifra" id="druzey"></span><span class="podpis cifra" id="zayavki"></span></div>
+    <ul class="spisok" id="topDruzey"></ul>
   </section>
 
-  <h2 class="zag">Запасы</h2>
-  <section class="resursy">
-    <div class="resurs"><span class="podpis">Энергия</span><b class="cifra" id="energiya"></b></div>
-    <div class="resurs"><span class="podpis">Сигареты</span><b class="cifra" id="sigarety"></b></div>
-    <div class="resurs"><span class="podpis">Рубли</span><b class="cifra" id="rubli"></b></div>
-    <div class="resurs"><span class="podpis">Бумага</span><b class="cifra" id="bumaga"></b></div>
+  <h2 class="zag zek">Запасы</h2>
+  <section class="zapasy">
+    <div class="zapas"><img alt="" src="https://oldprison-prod-assets-cdn-yandex.luckygem.online/assets/Energy.png"><div><span>Энергия</span><b class="cifra" id="energiya"></b></div></div>
+    <div class="zapas"><img alt="" src="https://oldprison-prod-assets-cdn-yandex.luckygem.online/assets/HUD/cigarettes.png"><div><span>Сигареты</span><b class="cifra" id="sigarety"></b></div></div>
+    <div class="zapas"><img alt="" src="https://oldprison-prod-assets-cdn-yandex.luckygem.online/assets/HUD/rubles.png"><div><span>Рубли</span><b class="cifra" id="rubli"></b></div></div>
+    <div class="zapas"><img alt="" src="https://oldprison-prod-assets-cdn-yandex.luckygem.online/assets/HUD/paper.png"><div><span>Бумага</span><b class="cifra" id="bumaga"></b></div></div>
   </section>
 
-  <h2 class="zag">Календарь</h2>
-  <section class="karta"><span id="kalendar"></span></section>
+  <h2 class="zag zek">Календарь</h2>
+  <section class="list"><span id="kalendar"></span></section>
 
-  <h2 class="zag">Последние действия</h2>
-  <section class="karta"><ul class="dela" id="dela"></ul></section>
+  <h2 class="zag zek">Последние действия</h2>
+  <section class="list"><ul class="dela" id="dela"></ul></section>
 
-  <h2 class="zag">Пульт</h2>
+  <h2 class="zag zek">Пульт</h2>
   <section class="pult" id="pult">
-    <button class="glavnaya" id="knStart" type="button">▶️ Включить бота</button>
-    <button id="knPauza2" type="button">⏸ На 2 часа</button>
-    <button id="knPauza" type="button">⏸ До включения</button>
+    <button class="glavnaya" id="knStart" type="button">Включить бота</button>
+    <button id="knPauza2" type="button">Пауза 2 часа</button>
+    <button id="knPauza" type="button">Пауза</button>
   </section>
   <p class="zametka" id="pultZametka">Команда доходит до бота за 5 минут — столько ждать ближайшего прогона.</p>
 </main>
 
-<p id="pusto" class="pusto" hidden>Нет данных. Открой пульт кнопкой «Тюряга» в чате бота — он подставляет свежие цифры.</p>
+<p id="pusto" class="pusto list" hidden>Нет данных. Открой пульт кнопкой «Тюряга» в чате бота — он подставляет свежие цифры.</p>
 
 <script>
 "use strict";
 const tg = window.Telegram && window.Telegram.WebApp;
-if (tg) { tg.ready(); tg.expand(); }
+if (tg) { tg.ready(); tg.expand(); try { tg.setHeaderColor("#0d0b09"); tg.setBackgroundColor("#0d0b09"); } catch (e) {} }
 
 function prochitat() {
   const h = location.hash.slice(1);
@@ -159,6 +189,7 @@ if (!d) {
   const b = d.b;
   if (b && b.n) {
     ust("bossImya", b.n);
+    ust("bossNomer", b.id ? "№" + b.id : "№?");
     ust("bossDo", b.end ? "до " + b.end : "");
     document.getElementById("polosaBoss").style.width = b.m ? Math.max(0, Math.min(100, b.h / b.m * 100)) + "%" : "0%";
     ust("bossHp", chislo(b.h) + " / " + chislo(b.m));
