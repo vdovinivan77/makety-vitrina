@@ -7,44 +7,58 @@
 <title>Тюряга — пульт бота</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-/* Пульт бота «Тюряга» в стиле игры. Картинки и шрифт — с сервера игры по ссылкам (CORS открыт), в репозиторий
-   не копируются. Страница — пустой шаблон: данные приходят только во фрагменте ссылки (#…), на сервер не уходят. */
+/* Пульт бота «Тюряга» в стиле игры, v2 — с вкладками. Картинки и шрифт — с сервера игры по ссылкам (CORS открыт),
+   в репозиторий не копируются. Страница — пустой шаблон: данные приходят только во фрагменте ссылки (#…), на сервер не уходят. */
 @font-face{font-family:"PrisonFont";src:url("https://oldprison-prod-assets-cdn-yandex.luckygem.online/assets/fonts/PrisonFont.woff") format("woff");font-display:swap}
 :root{
   --cdn:"https://oldprison-prod-assets-cdn-yandex.luckygem.online/assets";
   --noch:#0d0b09; --kozha:#2b1f17; --kozha2:#3a2a1f; --krem:#f1e6cf; --chernila:#2a2119; --karandash:#6b5d4f;
   --oranzh:#e8772a; --zhelt:#f2d21c; --krov:#c8322c; --zelen:#3f8f3a;
+  --niz:max(env(safe-area-inset-bottom, 0px), var(--tg-safe-area-inset-bottom, 0px));   /* полоска «домой» снизу */
+  --tabh:62px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 [hidden]{display:none!important}
 html{background:var(--noch)}
 body{min-height:100vh;color:var(--krem);font:15px/1.4 Calibri,"Segoe UI",system-ui,-apple-system,sans-serif;
-  -webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;
-  padding:12px 14px calc(28px + env(safe-area-inset-bottom));
+  -webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;overflow-x:hidden;
+  padding:12px 14px calc(var(--tabh) + 22px + var(--niz))}
+/* фон — неподвижным слоем: в Telegram на iPhone background-attachment:fixed не работает и фон растягивался по длинной странице */
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
   background:linear-gradient(rgba(10,8,6,.55),rgba(10,8,6,.8)),
-    url("https://oldprison-prod-assets-cdn-yandex.luckygem.online/assets/PrisonV3/backV2.webp") center top/cover fixed var(--noch)}
+    url("https://oldprison-prod-assets-cdn-yandex.luckygem.online/assets/PrisonV3/backV2.webp") center top/cover var(--noch)}
+img{max-width:100%}
+:focus-visible{outline:2px solid var(--zhelt);outline-offset:2px}
 .zek{font-family:"PrisonFont",Impact,"Arial Black",sans-serif;letter-spacing:.02em;text-transform:uppercase}
 .cifra{font-variant-numeric:tabular-nums;white-space:nowrap}
 
-/* шапка — доска */
+/* шапка — доска; на вкладках, кроме сводки, — пониже */
 .shapka{position:relative;display:flex;align-items:center;justify-content:space-between;gap:10px;
   padding:18px 22px 16px;border-radius:6px;box-shadow:0 6px 18px rgba(0,0,0,.55);
   background:url("https://oldprison-prod-assets-cdn-yandex.luckygem.online/assets/offers/limited/board.webp") center/cover}
 .shapka h1{font-size:34px;line-height:1;color:var(--krem);text-shadow:0 2px 0 #1b130d,0 0 12px rgba(0,0,0,.6)}
+.shapka.mini{padding:10px 16px 9px}
+.shapka.mini h1{font-size:24px}
 .shtamp{font-size:13px;padding:5px 10px;border:2.5px solid currentColor;border-radius:4px;transform:rotate(-6deg);
   color:#d9f0c9;background:rgba(40,85,35,.55);box-shadow:0 0 0 1px rgba(0,0,0,.25) inset}
 .shtamp.pauza{color:#ffd9d4;background:rgba(150,30,25,.6)}
+.shapka.mini .shtamp{font-size:11px;padding:3px 8px}
 .obnovleno{font-size:12px;color:#bfae93;padding:8px 4px 2px;text-shadow:0 1px 2px #000}
 
 /* бирка раздела — как оранжевые надписи на панели игры */
 .zag{display:inline-block;margin:16px 0 6px 2px;padding:3px 10px 2px;font-size:14px;color:#1d140d;
   background:var(--oranzh);border-radius:3px;box-shadow:0 2px 0 #8c4314}
+/* стрелка у бирки — рамками CSS: в шрифте игры нет ни «›», ни «▸» */
+.zag.klik::after,details.cep>summary .zag::after{content:"";display:inline-block;margin-left:8px;vertical-align:1px;
+  border:5px solid transparent;border-left:7px solid currentColor;border-right:0;transition:transform .15s}
+details.cep[open]>summary .zag::after{transform:rotate(90deg)}
 
-/* листок в клетку */
+/* листок в клетку; длинные списки режутся на несколько листков, чтобы клетка не растягивалась */
 .list{position:relative;color:var(--chernila);padding:16px 18px 14px;
   background:url("https://oldprison-prod-assets-cdn-yandex.luckygem.online/assets/PrisonV3/All/RulesModal.webp") center/100% 100% no-repeat;
   filter:drop-shadow(0 5px 10px rgba(0,0,0,.5))}
-.ryad{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.list+.list{margin-top:8px}
+.ryad{display:flex;align-items:baseline;justify-content:space-between;gap:4px 12px;flex-wrap:wrap}
 .ryad+.ryad{margin-top:8px}
 .bolshoe{font-size:30px;line-height:1.05;color:#231a12}
 .podpis{font-size:13.5px;color:var(--karandash)}
@@ -52,30 +66,128 @@ body{min-height:100vh;color:var(--krem);font:15px/1.4 Calibri,"Segoe UI",system-
 .polosa i{display:block;height:100%;transition:width .5s ease;
   background:url("https://oldprison-prod-assets-cdn-yandex.luckygem.online/assets/common/btnLevelUpActiv.png") center/100% 100%}
 .polosa.zdorove i{background:linear-gradient(#e24a3f,#9e211c)}
-.spisok{list-style:none;margin-top:10px}
-.spisok li{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-top:1px dashed rgba(60,45,30,.35)}
-.spisok .imya{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.spisok .zn{color:var(--karandash)}
+.polosa.tonk{height:8px;margin-top:5px}
+.spisok{list-style:none}
+.spisok li{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:7px 0;border-top:1px dashed rgba(60,45,30,.35)}
+.spisok li:first-child{border-top:0;padding-top:0}
+.spisok .zn{color:var(--karandash);text-align:right}
+.klik{cursor:pointer}
+.klik:active{transform:translateY(1px)}
+.centr{text-align:center}
 
-/* босс — на фоне ростовой линейки */
+/* босс — на фоне ростовой линейки (у цепочек 2 и 3 — свои фоны из игры) */
 .boss{display:grid;grid-template-columns:76px 1fr;gap:14px;align-items:center}
 .boss>div{min-width:0}
-.boss .ryad{flex-wrap:wrap;row-gap:2px}
-.lineyka{width:76px;height:86px;border-radius:3px;display:grid;place-items:end center;padding-bottom:8px;
+.lineyka{position:relative;overflow:hidden;width:76px;height:86px;border-radius:3px;display:grid;place-items:end center;padding-bottom:8px;flex:none;
   background:url("https://oldprison-prod-assets-cdn-yandex.luckygem.online/assets/PrisonV3/bosses/avatarbgBoss/bgAvatarBoss1.png") center/cover;
   box-shadow:0 2px 6px rgba(0,0,0,.35)}
+.lineyka.kat2{background-image:url("https://oldprison-prod-assets-cdn-yandex.luckygem.online/assets/PrisonV3/bosses/avatarbgBoss/bgAvatarBoss2.png")}
+.lineyka.kat3{background-image:url("https://oldprison-prod-assets-cdn-yandex.luckygem.online/assets/PrisonV3/bosses/avatarbgBoss/bgAvatarBoss3.png")}
 .lineyka b{font-size:11px;color:#fff;background:#1d140d;padding:1px 5px;border-radius:2px}
+.lineyka:not(.bez) .nomer{display:none}        /* номер — только когда картинки нет совсем */
+.lineyka .portret{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:center bottom}
+.lineyka .portret.klyuch{inset:auto;left:50%;top:50%;width:34%;height:auto;transform:translate(-50%,-50%)}
+/* у боссов 40–55 превью — поясные фигуры разных размеров: вырезаем голову, как у остальных (рамка — в KROP) */
+.lineyka .portret.krop{inset:auto;left:0;top:0;height:auto;max-width:none;object-fit:fill}
+.lineyka .portret.poyas{object-fit:cover;object-position:50% 12%}
+.lineyka.mal{width:58px;height:66px}
+.lineyka.bolsh{width:168px;height:190px;border-radius:4px;box-shadow:0 4px 12px rgba(0,0,0,.45)}
+.lineyka.bolsh b{font-size:14px}
+.lineyka .zhivoy{position:absolute;left:50%;bottom:0;transform:translateX(-50%)}
+
+/* текущий бой */
+.arena{display:flex;justify-content:center;padding-top:2px}
+.tablichka{position:relative;display:table;min-width:176px;max-width:100%;margin:-12px auto 0;padding:13px 16px 10px;text-align:center;
+  font-size:24px;line-height:1;color:#1d140d;overflow-wrap:anywhere;
+  background:url("https://oldprison-prod-assets-cdn-yandex.luckygem.online/assets/PrisonV3/bosses/avatarbgBoss/nameBosTable.png") center/100% 100% no-repeat;
+  filter:drop-shadow(0 2px 3px rgba(0,0,0,.45))}
+.tablichka+.ryad{margin-top:12px}
+.tablica{list-style:none}
+.tablica li{display:grid;grid-template-columns:22px 30px minmax(0,1fr) auto;gap:8px;align-items:center;padding:6px 0;border-top:1px dashed rgba(60,45,30,.35)}
+.tablica li:first-child{border-top:0;padding-top:0}
+.tablica .mesto{font-size:12.5px;color:var(--karandash);text-align:center}
+.tablica .zn{color:var(--karandash)}
+.tablica li.ya .nik{background:linear-gradient(transparent 12%,rgba(242,210,28,.6) 12%,rgba(242,210,28,.6) 88%,transparent 88%);padding:0 3px;margin-left:-3px}
+.nikbox{display:flex;align-items:baseline;min-width:0}
+.ty{font-size:11px;color:#8c4314;margin-left:5px;flex:none}
+.nik{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.ava{width:30px;height:30px;border-radius:5px;object-fit:cover;background:#3a2c21;border:1px solid rgba(0,0,0,.35);display:block}
+.korona{width:22px;height:auto;display:block}
+
+/* ключи и цепочка */
+.klyuchi{display:flex;flex-wrap:wrap;gap:6px;padding:2px 2px 0}
+.klyuchi span{display:inline-flex;align-items:center;gap:5px;padding:4px 9px 4px 6px;border-radius:5px;font-size:13px;
+  background:linear-gradient(var(--kozha2),var(--kozha));border:1px solid #4d382a;box-shadow:0 2px 5px rgba(0,0,0,.4)}
+.klyuchi img{height:18px;width:auto}
+.zametka{font-size:12.5px;color:#bfae93;padding:10px 4px 0;text-shadow:0 1px 2px #000}
+.legenda img{height:14px;width:auto;vertical-align:-2px;margin:0 3px 0 6px}
+details.cep{margin-top:6px}
+details.cep>summary{list-style:none;cursor:pointer;display:flex;align-items:baseline;flex-wrap:wrap;gap:0 10px}
+details.cep>summary::-webkit-details-marker{display:none}
+.skolko{font-size:12.5px;color:#bfae93;text-shadow:0 1px 2px #000}
+.bk-spisok{list-style:none}
+.bk{display:grid;grid-template-columns:58px minmax(0,1fr);gap:11px;align-items:start;padding:10px 0;border-top:1px dashed rgba(60,45,30,.35)}
+.bk:first-child{border-top:0;padding-top:0}
+.bk:last-child{padding-bottom:0}
+.bk .imya{font-size:18px;line-height:1.05;color:#231a12}
+.bk .podpis{font-size:12.5px;line-height:1.35}
+.bk .podpis+.podpis{margin-top:1px}
+.bk .shtamp{margin:6px 0 2px}
+.bk .info{margin-top:5px}
+.bk .limit{color:var(--krov)}
+/* закрытые — приглушены портрет и линейка; текст читается, штамп — в полную силу */
+.bk.zakryt .lineyka{opacity:.55;filter:grayscale(1)}
+.bk.zakryt .imya,.bk.zakryt .podpis{opacity:.85}
+.bk.tek{background:linear-gradient(90deg,rgba(242,210,28,.32),rgba(242,210,28,0) 80%);border-radius:4px}
+.rezhimy img{height:13px;width:auto;vertical-align:-1px;margin-left:3px}
+/* штампы на бумаге — чернилами */
+.shtamp.mal{display:inline-block;font-size:11px;line-height:1.15;padding:3px 7px 2px;border-width:2px;transform:rotate(-2.5deg);box-shadow:none}
+.shtamp.boy{color:#6b3a00;background:rgba(242,210,28,.6)}
+.shtamp.otkryt{color:#22621d;background:rgba(63,143,58,.14)}
+.shtamp.nuzhno{color:#a3231d;background:rgba(200,50,44,.08)}
+.shtamp.zakryt{color:#4d443a;background:rgba(0,0,0,.07)}
 
 /* запасы — тёмные кожаные плашки с иконками, как верхняя панель игры */
-.zapasy{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
-.zapas{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:6px;
+.zapasy{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.zapas{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:6px;min-width:0;
   background:linear-gradient(var(--kozha2),var(--kozha));border:1px solid #4d382a;box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 3px 8px rgba(0,0,0,.45)}
+.zapas.shir{grid-column:1/-1}
+.zapas.shir>div{flex:1;min-width:0}
 .zapas img{width:30px;height:30px;object-fit:contain;flex:none}
 .zapas span{display:block;font-size:12px;color:#c6b08f}
 .zapas b{font-size:19px;color:var(--krem)}
+.zapas .polosa{margin-top:6px;height:7px}
 .dela{list-style:none}
-.dela li{padding:6px 0;border-top:1px dashed rgba(60,45,30,.35);font-size:14px}
+.dela li{display:grid;grid-template-columns:44px minmax(0,1fr);gap:8px;padding:6px 0;border-top:1px dashed rgba(60,45,30,.35);font-size:14px}
 .dela li:first-child{border-top:0;padding-top:0}
+.dela .vr{color:var(--karandash);font-size:13px}
+.dela .tx{overflow-wrap:anywhere}
+.galka{font-size:13px;color:var(--zelen)}
+.zadaniya{list-style:none}
+.zadaniya li+li{margin-top:9px}
+.zadaniya .imya{font-size:14px;overflow-wrap:anywhere}
+.konec{margin-top:10px}
+
+/* друзья */
+.druz{list-style:none}
+.druz li{display:grid;grid-template-columns:22px 30px minmax(0,1fr) auto;gap:8px;align-items:center;padding:6px 0;border-top:1px dashed rgba(60,45,30,.35)}
+.druz li:first-child{border-top:0;padding-top:0}
+.druz .mesto{font-size:12.5px;color:var(--karandash);text-align:center}
+.druz .zn{color:var(--karandash)}
+.druz li>*,.tablica li>*{min-width:0}
+.metka{display:inline-block;margin-top:2px;font-size:10.5px;line-height:1.2;padding:1px 6px 0;border-radius:3px;background:var(--krov);color:#fff}
+
+/* столбики по дням */
+.grafik{display:flex;align-items:flex-end;gap:3px;margin-top:10px}
+.grafik.tesno{gap:2px}
+.stolb{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end}
+.stolb .zn{font-size:10.5px;line-height:1.1;color:var(--chernila);margin-bottom:3px}
+.grafik.tesno .stolb .zn{writing-mode:vertical-rl;transform:rotate(180deg);font-size:10px;margin-bottom:4px}
+.stolb i{display:block;width:100%;max-width:28px;border-radius:2px 2px 0 0;
+  background:linear-gradient(#f08a3c,#a9501a);box-shadow:inset 0 1px 0 rgba(255,255,255,.35)}
+.stolb.segodnya i{background:linear-gradient(#ffe45a,var(--zhelt) 55%,#d9b40e);box-shadow:inset 0 0 0 1px #8a7406}
+.stolb .dt{font-size:10px;color:var(--karandash);margin-top:3px;border-top:1px solid rgba(60,45,30,.5);width:100%;text-align:center;padding-top:2px}
+.grafik-zag{font-size:15px;color:#231a12}
 
 /* пульт — жёлтые кнопки игры */
 .pult{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}
@@ -83,108 +195,669 @@ body{min-height:100vh;color:var(--krem);font:15px/1.4 Calibri,"Segoe UI",system-
   height:48px;border:2px solid #1b130d;border-radius:5px;cursor:pointer;color:#1b130d;
   background:linear-gradient(#ffe45a,var(--zhelt) 55%,#d9b40e);box-shadow:0 3px 0 #1b130d}
 .pult button.glavnaya{grid-column:1/-1}
+.vkladki,.pult{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}   /* без синих маркеров и «Сохранить изображение» */
+.vkladki img{-webkit-user-drag:none}
 .pult button:active{transform:translateY(2px);box-shadow:0 1px 0 #1b130d}
-.zametka{font-size:12.5px;color:#bfae93;padding:10px 4px 0;text-shadow:0 1px 2px #000}
+.spravka li b{color:#231a12;font-size:14px;flex:none}
+.spravka li span{text-align:right;color:var(--karandash);font-size:13.5px}
 .pusto{margin-top:24px;padding:28px 18px;text-align:center}
 .staroe{margin:8px 0 2px;padding:8px 12px;border-radius:5px;font-size:13.5px;color:#1d140d;background:var(--zhelt);box-shadow:0 2px 0 #8a7406}
+
+/* вкладки — тёмная кожа внизу, активная жёлтая, как кнопки игры */
+.vkladki{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;
+  padding:6px 6px calc(6px + var(--niz));
+  background:linear-gradient(#3a2a1f,#1f160f);border-top:2px solid #120c08;
+  box-shadow:0 -6px 16px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.08)}
+.vkladki button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;height:50px;min-width:0;padding:0 1px;
+  border:1.5px solid #120c08;border-radius:5px;cursor:pointer;color:#c6b08f;overflow:hidden;
+  background:linear-gradient(#33251b,#251a12);box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 2px 0 #0b0705;
+  font:11px/1 "PrisonFont",Impact,"Arial Black",sans-serif;letter-spacing:.02em;text-transform:uppercase}
+.vkladki button img{width:22px;height:22px;object-fit:contain;pointer-events:none}
+.vkladki button[aria-selected="true"]{color:#1b130d;border-color:#1b130d;
+  background:linear-gradient(#ffe45a,var(--zhelt) 55%,#d9b40e);box-shadow:0 2px 0 #1b130d}
+.vkladki button:active{transform:translateY(1px)}
+@media (max-width:350px){.vkladki button{font-size:9.5px}.vkladki button img{width:19px;height:19px}}
 </style>
 </head>
 <body>
-<header class="shapka">
+<header class="shapka" id="shapka">
   <h1 class="zek">Тюряга</h1>
   <span id="rezhim" class="shtamp zek">работает</span>
 </header>
 <p id="obnovleno" class="obnovleno"></p>
 <p id="staroe" class="staroe" hidden></p>
+<p id="oshibka" class="pusto list" hidden></p>
 
-<main id="vse" hidden>
-  <h2 class="zag zek">Уровень</h2>
-  <section class="list">
-    <div class="ryad"><span class="bolshoe zek cifra" id="uroven"></span><span class="podpis cifra" id="avt"></span></div>
-    <div class="polosa" aria-hidden="true"><i id="polosaUr"></i></div>
-    <div class="ryad"><span class="podpis" id="doUr"></span><span class="podpis cifra" id="talanty"></span></div>
+<main>
+  <section id="v-svodka" class="vkladka" role="tabpanel" aria-labelledby="t-svodka"></section>
+  <section id="v-bossy" class="vkladka" role="tabpanel" aria-labelledby="t-bossy" hidden></section>
+  <section id="v-druzya" class="vkladka" role="tabpanel" aria-labelledby="t-druzya" hidden></section>
+  <section id="v-progress" class="vkladka" role="tabpanel" aria-labelledby="t-progress" hidden></section>
+  <section id="v-zhurnal" class="vkladka" role="tabpanel" aria-labelledby="t-zhurnal" hidden></section>
+  <section id="v-pult" class="vkladka" role="tabpanel" aria-labelledby="t-pult" hidden>
+    <h2 class="zag zek">Пульт</h2>
+    <section class="pult" id="pult">
+      <button class="glavnaya" id="knStart" type="button">Включить бота</button>
+      <button id="knPauza2" type="button">Пауза 2 часа</button>
+      <button id="knPauza" type="button">Пауза</button>
+    </section>
+    <p class="zametka" id="pultZametka">Бот ответит в чате, обычно за 5 минут, иногда до 10. Дождись ответа «⏸ на паузе» — потом играй сам.</p>
+
+    <h2 class="zag zek">Как часто работает бот</h2>
+    <section class="list"><ul class="spisok spravka">
+      <li><b class="zek">Боссы</b><span>каждые 5 минут</span></li>
+      <li><b class="zek">Остальное</b><span>каждые 30 минут</span></li>
+      <li><b class="zek">Отчёт в чат</b><span>раз в 4 часа</span></li>
+    </ul></section>
+
+    <h2 class="zag zek">Команды словами</h2>
+    <section class="list"><ul class="spisok spravka">
+      <li><b class="zek">стоп</b><span>пауза до команды «старт»</span></li>
+      <li><b class="zek">стоп 2</b><span>пауза на 2 часа (можно любое число часов)</span></li>
+      <li><b class="zek">старт</b><span>включить бота</span></li>
+      <li><b class="zek">статус</b><span>свежая сводка в чат</span></li>
+    </ul></section>
+    <p class="zametka">Пиши боту в чат обычным сообщением — так же, как кнопками.</p>
   </section>
-
-  <h2 class="zag zek">Босс</h2>
-  <section class="list" id="bossKarta">
-    <div class="boss"><div class="lineyka"><b class="zek" id="bossNomer">№?</b></div><div>
-    <div class="ryad"><span class="bolshoe zek" id="bossImya"></span><span class="podpis cifra" id="bossDo"></span></div>
-    <div class="polosa zdorove" aria-hidden="true"><i id="polosaBoss"></i></div>
-    <div class="ryad"><span class="podpis cifra" id="bossHp"></span><span class="podpis cifra" id="bossUbito"></span></div>
-    </div></div>
-    <ul class="spisok" id="uronDruzey"></ul>
-  </section>
-
-  <h2 class="zag zek">Друзья</h2>
-  <section class="list">
-    <div class="ryad"><span class="bolshoe zek cifra" id="druzey"></span><span class="podpis cifra" id="zayavki"></span></div>
-    <ul class="spisok" id="topDruzey"></ul>
-  </section>
-
-  <h2 class="zag zek">Запасы</h2>
-  <section class="zapasy">
-    <div class="zapas"><img alt="" src="https://oldprison-prod-assets-cdn-yandex.luckygem.online/assets/Energy.png"><div><span>Энергия</span><b class="cifra" id="energiya"></b></div></div>
-    <div class="zapas"><img alt="" src="https://oldprison-prod-assets-cdn-yandex.luckygem.online/assets/HUD/cigarettes.png"><div><span>Сигареты</span><b class="cifra" id="sigarety"></b></div></div>
-    <div class="zapas"><img alt="" src="https://oldprison-prod-assets-cdn-yandex.luckygem.online/assets/HUD/rubles.png"><div><span>Рубли</span><b class="cifra" id="rubli"></b></div></div>
-    <div class="zapas"><img alt="" src="https://oldprison-prod-assets-cdn-yandex.luckygem.online/assets/HUD/paper.png"><div><span>Бумага</span><b class="cifra" id="bumaga"></b></div></div>
-  </section>
-
-  <h2 class="zag zek">Календарь</h2>
-  <section class="list"><span id="kalendar"></span></section>
-
-  <h2 class="zag zek">Последние действия</h2>
-  <section class="list"><ul class="dela" id="dela"></ul></section>
-
-  <h2 class="zag zek">Пульт</h2>
-  <section class="pult" id="pult">
-    <button class="glavnaya" id="knStart" type="button">Включить бота</button>
-    <button id="knPauza2" type="button">Пауза 2 часа</button>
-    <button id="knPauza" type="button">Пауза</button>
-  </section>
-  <p class="zametka" id="pultZametka">Бот ответит в чате, обычно за 5 минут, иногда до 10. Дождись ответа «⏸ на паузе» — потом играй сам.</p>
 </main>
 
-<p id="pusto" class="pusto list" hidden>Нет данных. Открой пульт кнопкой «Тюряга» в чате бота — он подставляет свежие цифры.</p>
+<nav class="vkladki" role="tablist" aria-label="Разделы">
+  <button id="t-svodka" type="button" role="tab" aria-controls="v-svodka" aria-selected="true" data-v="svodka"><img alt="" src="https://oldprison-prod-assets-cdn-yandex.luckygem.online/assets/Guild/all/talantClanIcon.webp">Сводка</button>
+  <button id="t-bossy" type="button" role="tab" aria-controls="v-bossy" aria-selected="false" data-v="bossy"><img alt="" src="https://oldprison-prod-assets-cdn-yandex.luckygem.online/assets/PrisonV3/weeklyTop/icon_Uron.webp">Боссы</button>
+  <button id="t-druzya" type="button" role="tab" aria-controls="v-druzya" aria-selected="false" data-v="druzya"><img alt="" src="https://oldprison-prod-assets-cdn-yandex.luckygem.online/assets/Guild/all/clan_invite_icon.webp">Друзья</button>
+  <button id="t-progress" type="button" role="tab" aria-controls="v-progress" aria-selected="false" data-v="progress"><img alt="" src="https://oldprison-prod-assets-cdn-yandex.luckygem.online/assets/HUD/authority.png">Прогресс</button>
+  <button id="t-zhurnal" type="button" role="tab" aria-controls="v-zhurnal" aria-selected="false" data-v="zhurnal"><img alt="" src="https://oldprison-prod-assets-cdn-yandex.luckygem.online/assets/HUD/paper.png">Журнал</button>
+  <button id="t-pult" type="button" role="tab" aria-controls="v-pult" aria-selected="false" data-v="pult"><img alt="" src="https://oldprison-prod-assets-cdn-yandex.luckygem.online/assets/FortuneScene/klutsi_icon.webp">Пульт</button>
+</nav>
 
 <script>
 "use strict";
+const ROOT = "https://oldprison-prod-assets-cdn-yandex.luckygem.online";
+const A = ROOT + "/assets";
 const tg = window.Telegram && window.Telegram.WebApp;
-if (tg) { tg.ready(); tg.expand(); try { tg.setHeaderColor("#0d0b09"); tg.setBackgroundColor("#0d0b09"); } catch (e) {} }
+const verOk = v => { try { return !!(tg && tg.isVersionAtLeast && tg.isVersionAtLeast(v)); } catch (e) { return false; } };
+if (tg) {
+  tg.ready(); tg.expand();
+  try { tg.setHeaderColor("#0d0b09"); tg.setBackgroundColor("#0d0b09"); if (verOk("7.10") && tg.setBottomBarColor) tg.setBottomBarColor("#1f160f"); } catch (e) {}
+}
+const tuk = vid => { try { if (tg && tg.HapticFeedback) vid === "v" ? tg.HapticFeedback.selectionChanged() : tg.HapticFeedback.impactOccurred("light"); } catch (e) {} };
 
-function prochitat() {
+// Справочник боссов (KARTA.md, снято 12.10): [id, цепочка, имя, здоровье «Пацанского», режимы, авторитет за убийство,
+// прочая награда, вход — id босса, чьи ключи нужны (0 — свободно), сколько ключей, пометка].
+// Режимы: p — пацанский, b — блатной, a — авторитетный, v — воровской, g — бригадный. Пометка: g — только бригада, pr — приходящий.
+const BOSSY_SYRYE = [
+  [1, 1, "Кирпич", 1e3, "p", 25, "1 кл, 5 руб.", 0, 0, ""],
+  [2, 1, "Сизый", 1e4, "pba", 30, "1 кл, 200 сиг", 1, 3, ""],
+  [3, 1, "Махно", 5e4, "pba", 50, "1 кл, 20 руб.", 2, 3, ""],
+  [4, 1, "Лютый", 1e5, "pba", 100, "1 кл, 500 сиг", 3, 3, ""],
+  [5, 1, "Шайба", 5e5, "pba", 200, "1 кл, 5 000 сиг", 4, 1, ""],
+  [6, 1, "Бурят", 2e6, "pba", 500, "1 кл, 10 000 сиг, 2 шпроты", 5, 1, ""],
+  [7, 1, "Дядя Миша", 3e6, "pba", 750, "1 кл, 750 сах, 3 шпроты", 6, 1, ""],
+  [8, 1, "Хирург", 3e7, "pba", 1500, "1 кл, 1 500 сах, 30 шпрот", 7, 1, ""],
+  [17, 1, "Бугор", 1e9, "pbavg", 1e6, "1 кл, 2 500 сах, 1 000 шпрот", 8, 3, ""],
+  [19, 1, "Гастролёр", 1.5e5, "pba", 200, "1 кл, 100 сиг", 19, 2, "pr"],
+  [21, 1, "Бандяк", 5e6, "pba", 850, "1 кл, 850 сах, 5 шпрот", 5, 2, ""],
+  [23, 1, "Гризли", 1e7, "pba", 900, "1 кл, 900 сах, 900 сиг, 10 шпрот", 5, 3, ""],
+  [25, 1, "Пресс", 7e7, "pbag", 3000, "1 кл, 3 000 сах, 70 шпрот", 8, 1, ""],
+  [26, 1, "Север", 2e7, "pba", 1200, "1 кл, 1 200 сах, 1 200 сиг, 20 шпрот", 5, 3, ""],
+  [27, 1, "Феня", 1.5e7, "pba", 1100, "1 кл, 1 100 сах, 1 100 сиг, 15 шпрот", 5, 3, ""],
+  [29, 1, "Немой", 1e8, "pbav", 3500, "1 кл, 3 500 сах, 1 000 сиг, 100 шпрот", 25, 1, ""],
+  [31, 1, "Змей", 1.3e10, "pbav", 2e6, "1 кл, 13 000 шпрот", 17, 1, ""],
+  [37, 1, "Бидон", 3e8, "pbav", 8000, "1 кл, 8 000 сах, 300 шпрот", 25, 1, ""],
+  [39, 1, "Воркута", 4e8, "pba", 1000, "1 кл, 1 000 сах, 1 000 сиг", 0, 0, ""],
+  [40, 1, "Абу", 8e6, "pba", 1000, "1 000 сах, 1 000 сиг", 5, 3, ""],
+  [41, 1, "Мазай", 2.5e7, "pba", 1400, "1 400 сах, 1 000 сиг", 6, 3, ""],
+  [42, 1, "Старшой", 6e8, "pbavg", 15000, "1 кл, 15 000 сах", 25, 1, ""],
+  [45, 1, "Гвоздь", 2.5e10, "pba", 4e6, "", 31, 1, ""],
+  [53, 1, "Полтос", 9.5e8, "pbav", 12000, "12 000 сах", 42, 3, ""],
+  [9, 2, "Палыч", 1e5, "p", 25, "1 кл, 25 сах", 0, 0, ""],
+  [10, 2, "Циклоп", 3e5, "p", 100, "1 кл, 50 сах", 9, 3, ""],
+  [11, 2, "Раиса", 3e5, "p", 150, "1 кл, 100 сах", 10, 1, ""],
+  [12, 2, "Бес", 7e5, "p", 200, "1 кл, 200 сах", 11, 3, ""],
+  [13, 2, "Паленый", 1.5e6, "p", 300, "1 кл, 300 сах", 12, 3, ""],
+  [14, 2, "Близнецы", 2e6, "p", 400, "1 кл, 400 сах, 2 шпроты", 13, 1, ""],
+  [15, 2, "Борзов", 3e6, "pba", 500, "1 кл, 500 сах, 3 шпроты", 14, 1, ""],
+  [16, 2, "Дюбель", 4e7, "pba", 2500, "1 кл, 2 500 сах, 40 шпрот", 15, 1, ""],
+  [18, 2, "Крест", 5e9, "pba", 2.5e6, "1 кл, 5 000 сах, 5 000 шпрот", 16, 1, ""],
+  [20, 2, "Конвой", 1e7, "pbav", 200, "1 кл, 1 000 сах, 10 шпрот", 15, 1, ""],
+  [22, 2, "Бульдозер", 1.5e7, "pba", 2000, "1 кл, 2 000 сах, 15 шпрот", 15, 3, ""],
+  [24, 2, "Кусто", 2e7, "pba", 2200, "1 кл, 2 200 сах, 20 шпрот", 15, 3, ""],
+  [28, 2, "Цербер", 5e6, "pba", 850, "1 кл, 850 сах, 5 шпрот", 15, 1, ""],
+  [30, 2, "Чугун", 4e8, "pbavg", 10000, "1 кл, 10 000 сах, 400 шпрот", 11, 1, ""],
+  [38, 2, "Фин", 3e7, "pba", 2500, "1 кл, 2 500 сах, 30 шпрот", 20, 1, ""],
+  [44, 2, "Кнут", 5e8, "pbavg", 12000, "1 кл, 12 000 сах", 30, 1, ""],
+  [47, 2, "Ёхан", 7e6, "pba", 1000, "1 кл, 1 000 сах, 2 500 сиг", 12, 1, ""],
+  [48, 2, "Дантист", 1e8, "pba", 6000, "6 000 сах", 47, 1, ""],
+  [54, 2, "Сыч", 1e9, "pbavg", 13000, "1 кл, 13 000 сах", 44, 1, ""],
+  [55, 2, "Гром", 7e10, "pba", 6e6, "", 54, 3, ""],
+  [32, 3, "Жестянщики", 1e6, "p", 500, "1 кл, 500 сиг", 0, 0, "g"],
+  [33, 3, "Отбой", 5e6, "p", 750, "1 кл, 500 сиг", 32, 3, ""],
+  [34, 3, "Боцман", 1e7, "pba", 1000, "1 кл, 500 сиг", 32, 3, ""],
+  [35, 3, "Жульбаны", 5e7, "pba", 1250, "1 кл, 9 500 сиг, 10 шпрот", 34, 1, ""],
+  [36, 3, "Шнифер", 1e8, "pba", 2500, "1 кл, 13 500 сиг, 20 шпрот", 32, 3, ""],
+  [43, 3, "Бивень", 1.5e8, "pba", 3000, "10 000 сиг", 32, 3, ""],
+  [46, 3, "Чебот", 7.5e7, "pba", 2000, "1 кл, 1 000 сах, 12 000 сиг", 34, 1, ""],
+  [49, 3, "Контрабас", 2e8, "pba", 4000, "15 000 сиг", 35, 1, ""],
+  [50, 3, "Ташкент", 9e7, "pba", 3750, "15 000 сиг", 46, 3, ""],
+  [51, 3, "Крюгер", 8.75e7, "pba", 7000, "25 000 сиг, 1 000 сах", 35, 1, ""],
+  [52, 3, "Бельмондо", 1.25e8, "pba", 7000, "25 000 сиг, 1 000 сах", 34, 1, ""],
+];
+// чьи ключи — в родительном падеже
+const ROD = { 1: "Кирпича", 2: "Сизого", 3: "Махно", 4: "Лютого", 5: "Шайбы", 6: "Бурята", 7: "Дяди Миши", 8: "Хирурга",
+  17: "Бугра", 19: "Гастролёра", 25: "Пресса", 31: "Змея", 42: "Старшого", 9: "Палыча", 10: "Циклопа", 11: "Раисы",
+  12: "Беса", 13: "Паленого", 14: "Близнецов", 15: "Борзова", 16: "Дюбеля", 20: "Конвоя", 30: "Чугуна", 44: "Кнута",
+  47: "Ёхана", 54: "Сыча", 32: "Жестянщиков", 34: "Боцмана", 35: "Жульбанов", 46: "Чебота" };
+const KAT = { 1: "основная", 2: "вторая", 3: "третья" };
+const REZH = { p: ["/PrisonV3/bosses/Icon/icon_pacan.png", "пацанский"], b: ["/PrisonV3/bosses/Icon/icon_blatnoy.png", "блатной"],
+  a: ["/common/avtoritetny_icon.webp", "авторитетный"], v: ["/PrisonV3/bosses/Icon/icon_vorovskoy.png", "воровской"],
+  g: ["/PrisonV3/bosses/Icon/icon_brigade.png", "бригадный"] };
+const BOSS = {};
+BOSSY_SYRYE.forEach(([id, kat, imya, hp, rezh, avt, eshe, src, nado, pom]) => { BOSS[id] = { id, kat, imya, hp, rezh, avt, eshe, src, nado, pom }; });
+
+// --- мелочи: данные из ссылки может подделать кто угодно — всё через проверки и textContent ---
+const arr = x => (Array.isArray(x) ? x : []);
+const obj = x => (x && typeof x === "object" && !Array.isArray(x) ? x : {});
+const str = x => (typeof x === "string" || typeof x === "number" ? String(x) : "");   // объект из подделки — не «[object Object]»
+const est = x => x != null && x !== "" && typeof x !== "boolean" && isFinite(Number(x));
+const num = x => (est(x) ? Number(x) : 0);
+const chislo = n => (est(n) ? Number(n).toLocaleString("ru-RU") : "—");
+const celoe = x => { const n = Number(x); return Number.isInteger(n) && n > 0 && n < 1000 ? n : 0; };   // id босса
+const nbsp = s => s.replace(/(\d) (\d)/g, "$1 $2");
+const ED = [[1, ""], [1e3, "тыс."], [1e6, "млн"], [1e9, "млрд"]];
+function sokr(n) {                                      // 1 тыс., 100 тыс., 1,5 млн, 13 млрд
+  if (!est(n)) return "—";
+  n = Number(n);
+  let k = 0;
+  while (k < 3 && Math.abs(n) >= ED[k + 1][0]) k++;
+  if (!k) return n.toLocaleString("ru-RU");
+  const okr = x => { const t = Math.abs(x) < 100 ? 10 : 1; return Math.round(x * t) / t; };
+  let x = okr(n / ED[k][0]);
+  if (k < 3 && Math.abs(x) >= 1000) x = okr(n / ED[++k][0]);   // 999 600 — «1 млн», а не «1 000 тыс.»
+  return x.toLocaleString("ru-RU", { maximumFractionDigits: 1 }) + "\u00a0" + ED[k][1];   // число с единицей не разрывать
+}
+const sklon = (n, f) => { n = Math.abs(n) % 100; const k = n % 10; return f[n > 10 && n < 20 ? 2 : k === 1 ? 0 : k >= 2 && k <= 4 ? 1 : 2]; };
+function vremya(sek) {                                  // 118 → 1:58
+  sek = Math.max(0, Math.round(num(sek)));
+  const h = Math.floor(sek / 3600), m = Math.floor(sek % 3600 / 60), s = sek % 60, dd = x => String(x).padStart(2, "0");
+  return h ? h + ":" + dd(m) + ":" + dd(s) : m + ":" + dd(s);
+}
+function el(tag, cls, ...deti) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  for (const x of deti) if (x != null && x !== false && x !== "") e.append(x);
+  return e;
+}
+function kartinka(src, cls, alt) {
+  const i = document.createElement("img");
+  i.alt = alt || ""; i.decoding = "async"; i.loading = "lazy";
+  if (cls) i.className = cls;
+  i.src = src;
+  return i;
+}
+const zag = (t, kuda) => { const h = el("h2", "zag zek", t); return kuda ? klik(h, kuda) : h; };   // стрелка — в CSS
+const list = (...deti) => el("section", "list", ...deti);
+const ryad = (...deti) => el("div", "ryad", ...deti);
+const podpis = (t, cls) => el("span", "podpis" + (cls ? " " + cls : ""), t);
+function polosa(dolya, cls) {
+  const i = el("i");
+  i.style.width = Math.max(0, Math.min(100, dolya * 100)) + "%";
+  const p = el("div", "polosa" + (cls ? " " + cls : ""), i);
+  p.setAttribute("aria-hidden", "true");
+  return p;
+}
+function listy(elementy, poN, klass) {                  // длинный список — на несколько листков
+  const out = [];
+  for (let i = 0; i < elementy.length; i += poN) out.push(list(el("ul", klass, ...elementy.slice(i, i + poN))));
+  return out;
+}
+function klik(uzel, vkladka) {
+  uzel.classList.add("klik"); uzel.setAttribute("role", "button"); uzel.tabIndex = 0;
+  const idi = () => { tuk("v"); pokazat(vkladka); };
+  uzel.addEventListener("click", idi);
+  uzel.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); idi(); } });
+  return uzel;
+}
+
+// аватарка игрока: имя файла без расширения; пустая или битая — стандартная
+const AVA0 = A + "/avatars/default.png";
+function ava(s) {
+  s = str(s);
+  const i = kartinka(/^[0-9A-Za-z_-]{1,64}$/.test(s) ? ROOT + "/avatars/" + s + ".png" : AVA0, "ava");
+  i.onerror = () => { i.onerror = () => { i.style.visibility = "hidden"; }; i.src = AVA0; };
+  return i;
+}
+// неподвижный портрет босса — лёгкое превью, которое игра сама грузит на телефонах (4–23 КБ);
+// нет его — значок ключа; нет и ключа — номер на линейке, как в v1
+// У 1–39 превью 136×154 — голова крупно. У 40–55 — поясные фигуры разных размеров: рамка головы
+// [слева, сверху — доли ширины и высоты картинки, ширина рамки — доля ширины], подобрана по самим картинкам 12.10.
+const KROP = { 40: [0.309, 0.352, 0.502], 41: [-0.017, 0.052, 0.969], 42: [0.131, 0.139, 0.817], 43: [0.293, 0.103, 0.364],
+  44: [0.118, 0.068, 0.452], 45: [-0.003, 0.009, 0.967], 46: [0.065, 0.025, 0.919], 47: [0.07, 0.061, 0.637],
+  48: [-0.035, 0.075, 1.023], 49: [-0.106, 0.041, 1.177], 50: [-0.042, 0.01, 1.127], 51: [-0.104, 0.053, 1.085],
+  52: [0, 0.045, 0.992], 53: [0.143, 0.087, 0.86], 54: [0.072, 0.026, 0.592], 55: [0.03, 0.028, 0.818] };
+function portret(id) {
+  const i = kartinka(A + "/PrisonV3/bosses/LiteBosses/" + id + "/prew.webp", "portret");
+  const kr = KROP[id];
+  if (kr) {
+    i.classList.add("krop");
+    i.style.width = (100 / kr[2]).toFixed(1) + "%";
+    i.style.transform = "translate(" + (-kr[0] * 100).toFixed(1) + "%," + (-kr[1] * 100).toFixed(1) + "%)";
+  } else i.onload = () => {                              // новый босс с нестандартным превью — хотя бы верх по центру
+    if (i.classList.contains("klyuch") || !i.naturalWidth) return;
+    if (Math.abs(i.naturalWidth / i.naturalHeight - 136 / 154) > 0.1) i.classList.add("poyas");
+  };
+  i.onerror = () => {
+    i.onerror = () => { const p = i.parentNode; if (p) p.classList.add("bez"); i.remove(); };
+    i.removeAttribute("style"); i.className = "portret klyuch"; i.src = A + "/PrisonV3/bosses/key/" + id + "/1.png";
+  };
+  return i;
+}
+function lineyka(id, kat, razmer) {
+  const box = el("div", "lineyka kat" + (kat || 1) + (razmer ? " " + razmer : ""), el("b", "zek nomer", id ? "№" + id : "№?"));
+  if (id) box.append(portret(id)); else box.classList.add("bez");
+  return box;
+}
+function rezhimy(s) {
+  const w = el("span", "rezhimy");
+  for (const k of str(s)) if (REZH[k]) {
+    const i = kartinka(A + REZH[k][0], "", REZH[k][1]);
+    i.title = REZH[k][1];
+    i.onerror = () => i.replaceWith(" " + REZH[k][1].slice(0, 3) + ".");
+    w.append(i);
+  }
+  return w;
+}
+const nagrada = b => nbsp((b.avt >= 1e6 ? sokr(b.avt) : chislo(b.avt)) + " авт" + (b.eshe ? ", " + b.eshe : ""));
+// здоровье боя: миллиарды полным числом не влезают в строку — сокращаем, как в запасах
+const zdorove = b => (num(b.m) >= 1e7 ? sokr(b.h) + " / " + sokr(b.m) : chislo(b.h) + " / " + chislo(b.m));
+const uron = n => (num(n) >= 1e6 ? sokr(n) : chislo(n));
+const bkEst = d => Object.keys(obj(d.bk)).length > 0;   // ключи и бои известны (в v1 их нет)
+
+// --- данные из фрагмента ---
+// v2: «z» + base64url(deflate-raw(JSON)); v1: base64url(JSON) без сжатия
+function izB64(s) {
+  const b64 = s.replace(/-/g, "+").replace(/_/g, "/");
+  const bin = atob(b64 + "===".slice((b64.length + 3) % 4));
+  return Uint8Array.from(bin, c => c.charCodeAt(0));
+}
+async function prochitat() {
   // Telegram дописывает к фрагменту свои параметры (#данные?tgWebAppData=…&…) — в base64url нет «?» и «&»
-  const h = location.hash.slice(1).split(/[?&]/)[0];
-  if (!h) return null;
+  let h = location.hash.slice(1).split(/[?&]/)[0];
+  if (h.includes("%")) { try { h = decodeURIComponent(h); } catch (e) {} }
+  h = h.replace(/=+$/, "");                            // хвост «=» от base64 — не помеха
+  if (!h || h.includes("=") || /^tgWebApp/.test(h)) return { oshibka: "pusto" };
   try {
-    const b64 = h.replace(/-/g, "+").replace(/_/g, "/");
-    const bin = atob(b64 + "===".slice((b64.length + 3) % 4));
-    const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
-    return JSON.parse(new TextDecoder().decode(bytes));
-  } catch (e) { return null; }
+    if (h[0] === "z") {
+      if (typeof DecompressionStream !== "function") return { oshibka: "staryi" };
+      let ds;
+      try { ds = new DecompressionStream("deflate-raw"); } catch (e) { return { oshibka: "staryi" }; }
+      const tekst = await new Response(new Response(izB64(h.slice(1))).body.pipeThrough(ds)).text();
+      return { d: JSON.parse(tekst) };
+    }
+    return { d: izV1(JSON.parse(new TextDecoder().decode(izB64(h)))) };
+  } catch (e) { return { oshibka: "bitye" }; }
 }
-const chislo = n => (n == null || n === "" ? "—" : Number(n).toLocaleString("ru-RU"));
-const ust = (id, t) => { document.getElementById(id).textContent = t; };
-function spisok(id, ryady) {
-  const ul = document.getElementById(id);
-  ul.replaceChildren(...ryady.map(([a, b]) => {
-    const li = document.createElement("li");
-    const s1 = document.createElement("span"); s1.className = "imya"; s1.textContent = a;
-    const s2 = document.createElement("span"); s2.className = "zn cifra"; s2.textContent = b;
-    li.append(s1, s2); return li;
-  }));
-  ul.hidden = !ryady.length;
+// старый формат v1 — переводим в форму v2, показываем что есть
+function izV1(d) {
+  d = obj(d);
+  const o = Object.assign({}, d);
+  if (d.b && Array.isArray(d.b.f)) o.b = Object.assign({}, d.b, { f: d.b.f.map(x => ["", arr(x)[0], arr(x)[1], ""]) });
+  if (!Array.isArray(d.dr) && Array.isArray(d.dt)) o.dr = d.dt.map(x => ["", arr(x)[0], arr(x)[1], ""]);
+  if (typeof d.k === "string") o.k = { t: d.k };
+  if (!Array.isArray(d.j) && Array.isArray(d.s)) o.j = d.s.map(t => ["", t]);
+  return o;
+}
+// наш игрок в таблице урона: поле me, если бот его пришлёт; иначе — единственный в бою, кого нет среди друзей.
+// Угадывать можно, только если в dr пришли все друзья: бот кладёт 60 первых, остальные выглядели бы «нами».
+function moyUid(d) {
+  if (str(d.me)) return str(d.me);
+  if (!est(d.dn) || arr(d.dr).length < num(d.dn)) return null;
+  const druz = new Set(arr(d.dr).map(x => str(arr(x)[0])).filter(Boolean));
+  if (!druz.size) return null;
+  const chuzhie = arr(obj(d.b).f).map(x => str(arr(x)[0])).filter(u => u && !druz.has(u));
+  return chuzhie.length === 1 ? chuzhie[0] : null;
+}
+const klyuchIgroka = x => str(arr(x)[0]) || "n:" + str(arr(x)[1]);   // в v1 нет id — по нику
+
+// --- статус босса и порядок цепочки ---
+function status(b, d) {
+  const bk = obj(d.bk), zk = arr(bk.zk).map(Number);
+  if (celoe(obj(d.b).id) === b.id && str(obj(d.b).n)) return { t: "в бою", c: "boy" };
+  if (b.pom === "g") return { t: "только бригада", c: "zakryt", zakryt: true };
+  if (zk.includes(b.id)) return { t: "закрыт сервером", c: "zakryt", zakryt: true };
+  if (!b.src) return { t: "открыт", c: "otkryt" };
+  const chi = ROD[b.src] || "№" + b.src;
+  if (!bkEst(d)) return { t: "вход: " + b.nado + " кл. " + chi, c: "nuzhno" };   // ключи неизвестны
+  const est_ = num(obj(bk.keys)[b.src]);
+  if (est_ >= b.nado) return { t: "открыт", c: "otkryt" };
+  return { t: "нужно " + b.nado + " кл. " + chi + " (есть " + est_ + ")", c: "nuzhno", zakryt: true };
+}
+function poryadok(kat) {                                 // по ступеням: свободные, потом кого они открывают, и так далее
+  const svoi = BOSSY_SYRYE.map(r => BOSS[r[0]]).filter(b => b.kat === kat);
+  const deti = {};
+  svoi.forEach(b => { if (b.src && b.src !== b.id) (deti[b.src] = deti[b.src] || []).push(b); });
+  const korni = svoi.filter(b => !b.src || b.src === b.id || !BOSS[b.src] || BOSS[b.src].kat !== kat);
+  const out = [], byl = new Set();
+  let sloy = korni.filter(b => deti[b.id]);
+  while (sloy.length) {
+    const sled = [];
+    sloy.sort((x, y) => x.id - y.id).forEach(b => { if (byl.has(b.id)) return; byl.add(b.id); out.push(b); (deti[b.id] || []).forEach(c => sled.push(c)); });
+    sloy = sled;
+  }
+  korni.filter(b => !byl.has(b.id)).sort((x, y) => x.id - y.id).forEach(b => { byl.add(b.id); out.push(b); });   // одиночки — в конце
+  svoi.filter(b => !byl.has(b.id)).forEach(b => out.push(b));
+  return out;
 }
 
-const d = prochitat();
-if (!d) {
-  document.getElementById("pusto").hidden = false;
-} else {
-  document.getElementById("vse").hidden = false;
+// --- общие карточки ---
+function kartaUrovnya(d) {
+  const ot = num(d.a0), doo = num(d.a1), a = num(d.a);
+  return list(
+    ryad(el("span", "bolshoe zek cifra", (est(d.l) ? d.l : "—") + " ур."), podpis(chislo(d.a) + " авторитета", "cifra")),
+    polosa(doo > ot ? Math.max(.02, (a - ot) / (doo - ot)) : 0),
+    ryad(podpis(doo ? "до " + (num(d.l) + 1) + "-го: " + chislo(Math.max(0, doo - a)) : ""), podpis(est(d.tl) ? "талантов: " + d.tl : "", "cifra")));
+}
+function kalendar(k) {
+  if (typeof k === "string") k = { t: k };
+  k = obj(k);
+  if (!str(k.t) && !est(k.g)) return list(podpis("—"));
+  const s = list(ryad(el("span", "", str(k.t) || "задание дня"),
+    est(k.g) ? podpis(chislo(k.p) + " / " + chislo(k.g), "cifra") : null));
+  if (est(k.g)) s.append(polosa(num(k.g) ? num(k.p) / num(k.g) : 0, "tonk"));
+  const niz = [];
+  if (num(k.ok)) niz.push(el("span", "galka", el("b", "", "✓"), el("span", "zek", " выполнено")));   // «✓» нет в шрифте игры
+  if (est(k.n)) niz.push(podpis("выполнено дней: " + k.n));
+  const cl = arr(k.cl).filter(est);
+  if (cl.length) niz.push(podpis("к получению ступени: " + cl.join(", ")));
+  if (niz.length) s.append(ryad(...niz));
+  return s;
+}
+const zapis = x => { x = arr(x); return el("li", "", el("span", "vr cifra", str(x[0]) || "·"), el("span", "tx", str(x[1]))); };
+const zhurnalNovyeSverhu = d => arr(d.j).slice().reverse();
+
+// --- вкладка «Сводка» ---
+function svodka(d, v) {
+  v.append(zag("Уровень", "progress"), klik(kartaUrovnya(d), "progress"));
+
+  const b = obj(d.b), id = celoe(b.id), sp = BOSS[id], boy = !!str(b.n), bk = obj(d.bk);
+  const tekst = el("div", "");
+  if (boy) {
+    const dw = num(obj(bk.dw)[id]);
+    tekst.append(
+      ryad(el("span", "bolshoe zek", str(b.n)), podpis(str(b.end) ? "до " + str(b.end) : "", "cifra")),
+      polosa(num(b.m) ? num(b.h) / num(b.m) : 0, "zdorove"),
+      ryad(podpis(zdorove(b), "cifra"),
+        podpis(bkEst(d) ? "боёв с ним сегодня: " + dw + "/" + (num(bk.lim) || 7) : est(d.ub) ? "боёв сегодня: " + d.ub : "", "cifra")));
+  } else {
+    tekst.append(ryad(el("span", "bolshoe zek", "Боя нет")), polosa(0, "zdorove"),
+      ryad(podpis("бот начнёт новый в ближайшие 5 минут")));
+  }
+  v.append(zag("Босс", "bossy"), klik(list(el("div", "boss", lineyka(boy ? id : 0, sp ? sp.kat : 1), tekst)), "bossy"));
+
+  const dn = num(d.dn);
+  const dr = list(ryad(el("span", "bolshoe zek cifra", chislo(d.dn) + " " + sklon(dn, ["друг", "друга", "друзей"])),
+    podpis(est(d.dz) ? "заявок сегодня: " + d.dz : "", "cifra")));
+  if (num(d.dvh)) dr.append(ryad(podpis("входящих ждут: " + d.dvh, "cifra")));
+  v.append(zag("Друзья", "druzya"), klik(dr, "druzya"));
+
+  const plashka = (ikonka, imya, n) => el("div", "zapas", kartinka(A + ikonka, ""),
+    el("div", "", el("span", "", imya), el("b", "cifra", num(n) >= 1e7 ? sokr(n) : chislo(n))));   // большие — сокращённо, чтобы влезли
+  const en = el("div", "zapas shir", kartinka(A + "/Energy.png", ""),
+    el("div", "", el("span", "", "Энергия"), el("b", "cifra", (est(d.e) ? d.e : "—") + " / " + (num(d.em) || 50)),
+      polosa(num(d.e) / (num(d.em) || 50))));
+  v.append(zag("Запасы"), el("section", "zapasy", en,
+    plashka("/HUD/cigarettes.png", "Сигареты", d.c), plashka("/HUD/rubles.png", "Рубли", d.r),
+    plashka("/HUD/paper.png", "Бумага", d.pa), plashka("/HUD/sugar.png", "Сахар", d.su)));
+
+  v.append(zag("Календарь"), kalendar(d.k));
+
+  const pyat = zhurnalNovyeSverhu(d).slice(0, 5);
+  v.append(zag("Последние действия", "zhurnal"),
+    klik(list(el("ul", "dela", ...(pyat.length ? pyat.map(zapis) : [el("li", "", el("span", "vr", ""), el("span", "tx", "пока ничего"))]))), "zhurnal"));
+}
+
+// --- вкладка «Боссы» ---
+let zhivoyKorobka = null, zhivoyId = 0, zhivoyNachat = false;
+function bossy(d, v, moy) {
+  const b = obj(d.b), id = celoe(b.id), sp = BOSS[id], boy = !!str(b.n), bk = obj(d.bk);
+  const korobka = lineyka(boy ? id : 0, sp ? sp.kat : 1, "bolsh");
+  const geroy = list(el("div", "arena", korobka), el("div", "tablichka zek", boy ? str(b.n) : "Боя нет"));
+  geroy.classList.add("geroy");
+  if (boy) {
+    const lim = num(bk.lim) || 7, dw = num(obj(bk.dw)[id]), kill = obj(bk.kill)[id];
+    geroy.append(
+      ryad(podpis((id ? "№" + id : "") + (sp ? " · цепочка " + sp.kat : "")), podpis(str(b.end) ? "до " + str(b.end) + " МСК" : "", "cifra")),
+      polosa(num(b.m) ? num(b.h) / num(b.m) : 0, "zdorove"),
+      ryad(podpis(zdorove(b), "cifra"), podpis(num(b.m) ? Math.ceil(num(b.h) / num(b.m) * 100) + "%" : "", "cifra")),
+      ryad(podpis(bkEst(d) ? "бои сегодня " + dw + "/" + lim : est(d.ub) ? "боёв сегодня: " + d.ub : ""), podpis(est(kill) ? "рекорд: " + vremya(kill) : "", "cifra")));
+    if (sp) geroy.append(ryad(podpis("награда: " + nagrada(sp))));
+    if (id) { zhivoyKorobka = korobka; zhivoyId = id; }
+  } else {
+    geroy.append(el("p", "podpis centr", "бот начнёт новый бой в ближайшие 5 минут"));
+  }
+  v.append(zag("Текущий бой"), geroy);
+
+  const f = arr(b.f);
+  if (boy && f.length) {
+    v.append(zag("Урон в бою"));
+    listy(f.map((x, i) => {
+      x = arr(x);
+      const ya = moy != null && str(x[0]) === moy;
+      return el("li", ya ? "ya" : "", el("span", "mesto cifra", String(i + 1)), ava(x[3]),
+        el("span", "nikbox", el("span", "nik", str(x[1]) || "—"), ya ? el("small", "ty", "ты") : null),   // «ты» не режется с длинным ником
+        el("span", "zn cifra", uron(x[2])));
+    }), 6, "tablica").forEach(s => v.append(s));
+  }
+
+  // ключи на руках
+  const kl = Object.entries(obj(bk.keys)).filter(([k, n]) => celoe(k) && num(n) > 0);
+  if (bkEst(d)) {
+    v.append(zag("Ключи"));
+    v.append(kl.length
+      ? el("div", "klyuchi", ...kl.map(([k, n]) => {
+        const i = kartinka(A + "/PrisonV3/bosses/key/" + celoe(k) + "/1.png", "");
+        i.onerror = () => i.remove();
+        return el("span", "cifra", i, (BOSS[celoe(k)] ? BOSS[celoe(k)].imya : "№" + celoe(k)) + " ×" + num(n));
+      }))
+      : el("p", "zametka", "Ключей нет — их дают за убийства боссов."));
+  }
+
+  const leg = el("p", "zametka legenda", "Режимы:");
+  for (const k of "pbavg") { const i = kartinka(A + REZH[k][0], "", ""); i.onerror = () => i.remove(); leg.append(i, REZH[k][1]); }
+  v.append(leg);
+
+  const tekKat = sp ? sp.kat : 1, lim = num(bk.lim) || 7;
+  for (const kat of [1, 2, 3]) {
+    const spis = poryadok(kat).map(x => [x, status(x, d)]);
+    const otkr = spis.filter(([, s]) => !s.zakryt).length;
+    const det = el("details", "cep");
+    det.open = kat === tekKat;
+    const sm = el("summary", "", el("span", "zag zek", "Цепочка " + kat + " — " + KAT[kat]),   // «·» нет в шрифте игры
+      el("span", "skolko", bkEst(d) ? "открыто " + otkr + " из " + spis.length : spis.length + " " + sklon(spis.length, ["босс", "босса", "боссов"])));
+    sm.addEventListener("click", () => tuk("v"));
+    det.append(sm);
+    // по 2 карточки на листок — так клетка почти не тянется
+    listy(spis.map(([x, s]) => kartochka(x, s, d, lim)), 2, "bk-spisok").forEach(l => det.append(l));
+    v.append(det);
+  }
+}
+function kartochka(x, s, d, lim) {
+  const bk = obj(d.bk), boev = num(obj(bk.dw)[x.id]), pobed = num(obj(bk.w)[x.id]), kill = obj(bk.kill)[x.id];
+  const t = el("div", "",
+    ryad(el("b", "zek imya", x.imya), podpis("№" + x.id, "cifra")),
+    el("div", "podpis", nbsp(sokr(x.hp)) + " здоровья", rezhimy(x.rezh)),
+    el("div", "podpis", "награда: " + nagrada(x)),
+    el("span", "shtamp mal zek " + s.c, s.t));
+  // куски не рвутся внутри, а между ними строка переносится — Гастролёр с «приходящий» не вылезает за листок
+  const info = el("div", "podpis info");
+  const dob = (tekst, cls) => { if (info.childNodes.length) info.append(" · "); info.append(el("span", "cifra" + (cls ? " " + cls : ""), tekst)); };
+  if (bkEst(d) && (boev || !s.zakryt)) dob("бои сегодня " + boev + "/" + lim, boev >= lim ? "limit" : "");
+  if (pobed) dob("побед: " + pobed);
+  if (est(kill)) dob("рекорд: " + vremya(kill));
+  if (x.pom === "pr") dob("приходящий");
+  if (info.childNodes.length) t.append(info);
+  return el("li", "bk" + (s.zakryt ? " zakryt" : "") + (s.c === "boy" ? " tek" : ""), lineyka(x.id, x.kat, "mal"), t);
+}
+
+// живая голова текущего босса: лист кадров + порядок кадров из config_1.json; нет листа — остаётся неподвижный портрет
+const BOLSH_W = 168, BOLSH_H = 190;
+let zhivoy = null, tgAktivno = true;
+async function zapustitZhivogo() {
+  if (zhivoyNachat || !zhivoyKorobka || !zhivoyId) return;
+  zhivoyNachat = true;
+  try { if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return; } catch (e) {}
+  const json = url => fetch(url).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); });
+  for (const put of [A + "/PrisonV3/bosses/animPrevScroll/" + zhivoyId + "/", A + "/PrisonV3/bosses/AnimationBossesAll/" + zhivoyId + "/1/"]) {
+    try {
+      const [atlas, konf] = await Promise.all([json(put + "1.json"), json(put + "config_1.json")]);
+      // лист больше 10 млн точек (Бивень, 3393×3622 — около 49 МБ в памяти) телефону не по силам — остаётся портрет
+      const razm = obj(obj(atlas.meta).size);
+      if (num(razm.w) * num(razm.h) > 1e7) continue;
+      const ramki = obj(atlas.frames);
+      const kadry = arr(konf.sequence).map(s => ({ f: obj(ramki[str(obj(s).frame)]), t: Math.max(16, num(obj(s).delay) || 42) }))
+        .filter(k => k.f.frame && est(k.f.frame.w) && est(k.f.frame.h));
+      if (!kadry.length) continue;
+      const img = await new Promise((ok, ne) => { const i = new Image(); i.onload = () => ok(i); i.onerror = ne; i.src = put + "1.webp"; });
+      let w = 0, h = 0;
+      for (const k of kadry) { const s = obj(k.f.sourceSize).w ? k.f.sourceSize : k.f.frame; w = Math.max(w, num(s.w)); h = Math.max(h, num(s.h)); }
+      if (!w || !h) continue;
+      const cnv = document.createElement("canvas");
+      cnv.width = Math.ceil(w); cnv.height = Math.ceil(h); cnv.className = "zhivoy";
+      const m = Math.min(BOLSH_W / w, BOLSH_H / h);
+      cnv.style.width = Math.round(w * m) + "px"; cnv.style.height = Math.round(h * m) + "px";
+      const ctx = cnv.getContext("2d");
+      if (!ctx) return;
+      zhivoy = { cnv, ctx, img, kadry, i: 0, sled: 0, raf: 0 };
+      risovat(0);
+      const still = zhivoyKorobka.querySelector(".portret");
+      if (still) still.remove();
+      zhivoyKorobka.classList.remove("bez");
+      zhivoyKorobka.append(cnv);
+      zhivoy.i = 1 % kadry.length;
+      animSled();
+      return;
+    } catch (e) { /* следующая папка */ }
+  }
+}
+function risovat(n) {
+  const z = zhivoy, k = z.kadry[n].f, fr = k.frame, ss = obj(k.spriteSourceSize);
+  const x = num(ss.x), y = num(ss.y);
+  z.ctx.clearRect(0, 0, z.cnv.width, z.cnv.height);
+  if (k.rotated) {                                     // кадр в листе повёрнут на 90° по часовой
+    z.ctx.save(); z.ctx.translate(x, y + fr.h); z.ctx.rotate(-Math.PI / 2);
+    z.ctx.drawImage(z.img, fr.x, fr.y, fr.h, fr.w, 0, 0, fr.h, fr.w);
+    z.ctx.restore();
+  } else z.ctx.drawImage(z.img, fr.x, fr.y, fr.w, fr.h, x, y, fr.w, fr.h);
+}
+function shag(t) {
+  const z = zhivoy;
+  z.raf = 0;
+  if (document.hidden || !tgAktivno || aktivnaya !== "bossy") return;
+  if (!z.sled) z.sled = t;
+  if (t >= z.sled) {
+    risovat(z.i);
+    z.sled += z.kadry[z.i].t;
+    if (t - z.sled > 500) z.sled = t;                 // долго стояли — не догонять рывком
+    z.i = (z.i + 1) % z.kadry.length;
+  }
+  z.raf = requestAnimationFrame(shag);
+}
+function animSled() {                                  // крутить, только когда вкладка «Боссы» на экране
+  const z = zhivoy;
+  if (!z) return;
+  const nado = !document.hidden && tgAktivno && aktivnaya === "bossy";
+  if (nado && !z.raf) { z.sled = 0; z.raf = requestAnimationFrame(shag); }
+  else if (!nado && z.raf) { cancelAnimationFrame(z.raf); z.raf = 0; }
+}
+document.addEventListener("visibilitychange", animSled);
+if (tg && tg.onEvent) {
+  try { tg.onEvent("activated", () => { tgAktivno = true; animSled(); }); tg.onEvent("deactivated", () => { tgAktivno = false; animSled(); }); } catch (e) {}
+}
+
+// --- вкладка «Друзья» ---
+function druzya(d, v, moy) {
+  const dn = num(d.dn);
+  const s = list(ryad(el("span", "bolshoe zek cifra", chislo(d.dn) + " " + sklon(dn, ["друг", "друга", "друзей"]))),
+    ryad(podpis("заявок сегодня: " + chislo(d.dz), "cifra"), podpis("всего: " + chislo(d.dzt), "cifra")));
+  if (est(d.dvh)) s.append(ryad(podpis("входящих ждут: " + d.dvh, "cifra")));
+  v.append(zag("Друзья"), s);
+
+  const byut = new Set(arr(obj(d.b).f).filter(x => !(moy != null && str(arr(x)[0]) === moy)).map(klyuchIgroka));
+  const dr = arr(d.dr);
+  v.append(zag("Список"));
+  if (!dr.length) { v.append(list(podpis("Список придёт с ближайшим прогоном бота."))); return; }
+  listy(dr.map((x, i) => {
+    x = arr(x);
+    let mesto = el("span", "mesto cifra", String(i + 1));
+    if (i < 3) { const k = kartinka(A + "/PrisonV3/Friend/top" + (i + 1) + ".png", "korona", String(i + 1)); k.onerror = () => k.replaceWith(el("span", "mesto cifra", String(i + 1))); mesto = k; }
+    return el("li", "", mesto, ava(x[3]),
+      el("span", "", el("span", "nik", str(x[1]) || "—"), byut.has(klyuchIgroka(x)) ? el("span", "metka zek", "бьёт босса") : null),
+      el("span", "zn cifra", sokr(x[2])));
+  }), 6, "druz").forEach(l => v.append(l));
+  if (dn > dr.length) v.append(el("p", "zametka", "Показаны " + dr.length + " самых авторитетных из " + chislo(dn) + "."));
+}
+
+// --- вкладка «Прогресс» ---
+function grafik(nazv, tochki, itog, plyus) {
+  const n = tochki.length;
+  const podpisi = tochki.map(([, zn]) => (est(zn) ? (plyus && num(zn) > 0 ? "+" : "") + sokr(zn) : "—"));
+  // подписи — поперёк, если по ширине не влезают в колонку (≈5,6 px на знак при 10,5 px)
+  const shir = Math.max(200, ((document.documentElement || {}).clientWidth || 360) - 64);
+  const tesno = Math.max(...podpisi.map(s => s.length)) * 5.6 + 2 > (shir - 3 * (n - 1)) / n;
+  const max = Math.max(1, ...tochki.map(t => num(t[1])));
+  const g = el("div", "grafik" + (tesno ? " tesno" : ""));
+  tochki.forEach(([dt, zn], i) => {
+    const st = el("i");
+    st.style.height = num(zn) > 0 ? Math.max(3, Math.round(num(zn) / max * 96)) + "px" : "0px";
+    g.append(el("div", "stolb" + (i === n - 1 ? " segodnya" : ""), el("span", "zn cifra", podpisi[i]), st,
+      el("span", "dt cifra", tesno ? str(dt).split(".")[0] : str(dt))));
+  });
+  return list(ryad(el("b", "zek grafik-zag", nazv), podpis(itog || "", "cifra")), g);
+}
+function progress(d, v) {
+  v.append(zag("Уровень"), kartaUrovnya(d));
+
+  const zr = arr(d.zr);
+  if (zr.length || str(d.zre)) {
+    const ul = el("ul", "zadaniya", ...zr.map(z => {
+      z = arr(z);
+      const cur = num(z[1]), nado = num(z[2]);
+      return el("li", "", ryad(el("span", "imya", str(z[0]) || "—"),
+        podpis(chislo(z[1]) + " / " + chislo(z[2]) + (nado && cur >= nado ? " ✓" : ""), "cifra")), polosa(nado ? cur / nado : 0, "tonk"));
+    }));
+    v.append(zag("Заруба"), list(zr.length ? ul : null, str(d.zre) ? el("p", "podpis konec", "конец зарубы: " + str(d.zre) + " МСК") : null));
+  }
+
+  const h = arr(d.h).map(arr).filter(x => x.length);
+  v.append(zag("По дням"));
+  if (h.length < 2) {
+    v.append(list(el("p", "", "История копится, приходи завтра."),
+      h.length ? el("p", "podpis", "Сегодня: авторитет " + chislo(h[0][1]) + ", убийств " + chislo(h[0][4]) + ", друзей " + chislo(h[0][3]) + ".") : null));
+    return;
+  }
+  const pervyy = h[0], posl = h[h.length - 1];
+  const prirost = est(posl[1]) && est(pervyy[1]) ? num(posl[1]) - num(pervyy[1]) : null;
+  // авторитет и друзья в истории — итоги на конец дня: столбик — прирост за день (у первого дня его не знаем)
+  const zaDen = i => h.map((x, k) => [x[0], k && est(x[i]) && est(h[k - 1][i]) ? num(x[i]) - num(h[k - 1][i]) : null]);
+  v.append(grafik("Авторитет за день", zaDen(1), prirost != null ? (prirost >= 0 ? "+" : "") + sokr(prirost) + " за " + h.length + " дн." : "", true));
+  v.append(grafik("Убийства боссов", h.map(x => [x[0], x[4]]), "всего: " + chislo(h.reduce((s, x) => s + num(x[4]), 0))));
+  v.append(grafik("Новые друзья", zaDen(3), chislo(pervyy[3]) + " → " + chislo(posl[3]), true));
+}
+
+// --- вкладка «Журнал» ---
+function zhurnal(d, v) {
+  const j = zhurnalNovyeSverhu(d);
+  v.append(zag("Журнал"));
+  if (!j.length) { v.append(list(podpis("Пока пусто — бот запишет сюда свои действия."))); return; }
+  listy(j.map(zapis), 6, "dela").forEach(l => v.append(l));
+}
+
+// --- шапка и состояние ---
+function shapka(d) {
   const rz = document.getElementById("rezhim");
-  if (d.p) { rz.classList.add("pauza"); rz.textContent = d.pd ? "пауза до " + d.pd : "на паузе"; }
-  ust("obnovleno", "Обновлено " + (d.t || "—") + " МСК");
-  if (d.ts) {
-    const min = Math.round((Date.now() / 1000 - d.ts) / 60);
+  if (d.p === true || num(d.p)) { rz.classList.add("pauza"); rz.textContent = str(d.pd) ? "пауза до " + str(d.pd) : "на паузе"; }
+  document.getElementById("obnovleno").textContent = "Обновлено " + (str(d.t) || "—") + " МСК";
+  if (est(d.ts)) {
+    const min = Math.round((Date.now() / 1000 - num(d.ts)) / 60);
     if (min > 15) {
       const st = document.getElementById("staroe");
       st.textContent = "Цифры " + (min < 120 ? min + " мин" : Math.round(min / 60) + " ч") +
@@ -192,46 +865,75 @@ if (!d) {
       st.hidden = false;
     }
   }
-
-  ust("uroven", (d.l ?? "—") + " ур.");
-  ust("avt", chislo(d.a) + " авторитета");
-  const ot = d.a0 || 0, doo = d.a1 || 0, a = d.a || 0;
-  document.getElementById("polosaUr").style.width = doo > ot ? Math.min(100, Math.max(2, (a - ot) / (doo - ot) * 100)) + "%" : "0%";
-  ust("doUr", doo ? "до " + ((d.l || 0) + 1) + "-го: " + chislo(Math.max(0, doo - a)) : "");
-  ust("talanty", d.tl != null ? "талантов: " + d.tl : "");
-
-  const b = d.b;
-  if (b && b.n) {
-    ust("bossImya", b.n);
-    ust("bossNomer", b.id ? "№" + b.id : "№?");
-    ust("bossDo", b.end ? "до " + b.end : "");
-    document.getElementById("polosaBoss").style.width = b.m ? Math.max(0, Math.min(100, b.h / b.m * 100)) + "%" : "0%";
-    ust("bossHp", chislo(b.h) + " / " + chislo(b.m));
-    ust("bossUbito", d.ub != null ? "боёв сегодня: " + d.ub : "");
-    spisok("uronDruzey", (b.f || []).map(([n, u]) => [n, chislo(u) + " урона"]));
-  } else {
-    ust("bossImya", "Боя нет");
-    ust("bossHp", "бот начнёт новый в ближайшие 5 минут");
-    document.getElementById("polosaBoss").style.width = "0%";
-    ust("bossUbito", d.ub != null ? "боёв сегодня: " + d.ub : "");
-    spisok("uronDruzey", []);
-  }
-
-  ust("druzey", chislo(d.dn) + " " + (["друг", "друга", "друзей"][(n => n % 10 === 1 && n % 100 !== 11 ? 0 : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? 1 : 2)(d.dn || 0)]));
-  ust("zayavki", d.dz != null ? "заявок сегодня: " + d.dz : "");
-  spisok("topDruzey", (d.dt || []).map(([n, a]) => [n, chislo(a)]));
-
-  ust("energiya", (d.e ?? "—") + " / " + (d.em ?? 50));
-  ust("sigarety", chislo(d.c));
-  ust("rubli", chislo(d.r));
-  ust("bumaga", chislo(d.pa));
-  ust("kalendar", d.k || "—");
-  const dela = document.getElementById("dela");
-  dela.replaceChildren(...(d.s || []).map(t => { const li = document.createElement("li"); li.textContent = t; return li; }));
-  if (!(d.s || []).length) dela.replaceChildren(Object.assign(document.createElement("li"), { textContent: "пока ничего" }));
-
-  // все три кнопки — всегда: режим в данных может отставать от настоящего
 }
+const OSHIBKI = {
+  pusto: "Нет данных. Открой пульт кнопкой «Тюряга» в чате бота — он подставляет свежие цифры.",
+  staryi: "Этот Telegram не умеет распаковывать данные пульта. Обнови Telegram и открой пульт снова. Пауза и запуск работают и так — кнопкой «📊 Тюряга» под полем ввода или словами «стоп», «старт» в чате бота.",
+  bitye: "Данные в ссылке повреждены. Открой пульт заново кнопкой «Тюряга» в чате бота.",
+};
+let OSHIBKA = null;
+
+// --- вкладки ---
+const VKLADKI = ["svodka", "bossy", "druzya", "progress", "zhurnal", "pult"];
+const PAMYAT = "tyuryaga_vkladka";
+let aktivnaya = "svodka";
+function pokazat(imya, bezProkrutki) {
+  if (!VKLADKI.includes(imya)) imya = "svodka";
+  aktivnaya = imya;
+  for (const v of VKLADKI) {
+    document.getElementById("v-" + v).hidden = v !== imya;
+    const kn = document.getElementById("t-" + v);
+    kn.setAttribute("aria-selected", v === imya ? "true" : "false");
+    kn.tabIndex = v === imya ? 0 : -1;
+  }
+  document.getElementById("shapka").classList.toggle("mini", imya !== "svodka");
+  document.getElementById("oshibka").hidden = !OSHIBKA || imya === "pult";
+  try { sessionStorage.setItem(PAMYAT, imya); } catch (e) {}
+  if (!bezProkrutki) window.scrollTo(0, 0);
+  if (imya === "bossy") zapustitZhivogo();
+  animSled();
+}
+const knopki = document.querySelectorAll(".vkladki button");
+knopki.forEach(kn => kn.addEventListener("click", () => { if (kn.dataset.v !== aktivnaya) tuk("v"); pokazat(kn.dataset.v); }));
+document.querySelector(".vkladki").addEventListener("keydown", e => {
+  const i = VKLADKI.indexOf(aktivnaya), sdvig = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+  if (!sdvig) return;
+  e.preventDefault();
+  const imya = VKLADKI[(i + sdvig + VKLADKI.length) % VKLADKI.length];
+  pokazat(imya); document.getElementById("t-" + imya).focus();
+});
+document.querySelectorAll(".vkladki img").forEach(i => { i.onerror = () => i.remove(); });
+
+// раздел не отрисовался (кривые данные) — остальные живут
+function bezopasno(id, fn) {
+  const v = document.getElementById(id);
+  try { fn(v); } catch (e) {
+    try { console.error(e); } catch (e2) {}
+    v.append(list(podpis("Этот раздел не показался: в данных что-то не так. Остальные вкладки работают.")));
+  }
+}
+
+let D = null;
+(async () => {
+  let r;
+  try { r = await prochitat(); } catch (e) { r = { oshibka: "bitye" }; }
+  if (r.d && typeof r.d === "object" && !Array.isArray(r.d)) {
+    D = r.d;
+    try { shapka(D); } catch (e) {}
+    const moy = (() => { try { return moyUid(D); } catch (e) { return null; } })();
+    bezopasno("v-svodka", v => svodka(D, v));
+    bezopasno("v-bossy", v => bossy(D, v, moy));
+    bezopasno("v-druzya", v => druzya(D, v, moy));
+    bezopasno("v-progress", v => progress(D, v));
+    bezopasno("v-zhurnal", v => zhurnal(D, v));
+  } else {
+    OSHIBKA = r.oshibka || "bitye";
+    document.getElementById("oshibka").textContent = OSHIBKI[OSHIBKA] || OSHIBKI.bitye;
+  }
+  let s = "svodka";
+  try { s = sessionStorage.getItem(PAMYAT) || s; } catch (e) {}
+  pokazat(s, true);
+})();
 
 // Пульт. Открыт кнопкой клавиатуры чата (у неё нет query_id) — sendData: команда уходит боту, окно закрывается.
 // Открыт кнопкой меню или sendData не сработал за 1,5 с — ссылка на бота с командой (/start pauza2).
@@ -239,7 +941,7 @@ function komanda(tekst, kod) {
   if (!tg || !tg.platform || tg.platform === "unknown") { alert("Открой пульт в Telegram — кнопкой «Тюряга» в чате бота."); return; }
   if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred("light");
   const zapasnoy = () => {
-    if (d && d.bot) { tg.openTelegramLink("https://t.me/" + d.bot + "?start=" + kod); setTimeout(() => tg.close(), 300); }
+    if (D && /^[A-Za-z0-9_]{5,32}$/.test(str(D.bot))) { tg.openTelegramLink("https://t.me/" + D.bot + "?start=" + kod); setTimeout(() => tg.close(), 300); }
     else tg.showAlert("Напиши боту: " + tekst);
   };
   if (!(tg.initDataUnsafe && tg.initDataUnsafe.query_id)) {
