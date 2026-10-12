@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Тюряга — пульт бота</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+/* Пульт бота «Тюряга». Страница — пустой шаблон: данные приходят только во фрагменте ссылки (#…),
+   который бот ставит на кнопку в своём чате. На сервер фрагмент не уходит. Цвета — из темы Telegram. */
+:root{
+  --fon:var(--tg-theme-secondary-bg-color,#f1f1f4); --karta:var(--tg-theme-section-bg-color,var(--tg-theme-bg-color,#fff));
+  --tekst:var(--tg-theme-text-color,#111); --tihiy:var(--tg-theme-hint-color,#8a8a90);
+  --akcent:var(--tg-theme-button-color,#2f80ed); --naakcente:var(--tg-theme-button-text-color,#fff);
+  --zag:var(--tg-theme-section-header-text-color,var(--tihiy)); --opasno:var(--tg-theme-destructive-text-color,#e5484d);
+  --gran:color-mix(in srgb,var(--tekst) 9%,transparent);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+[hidden]{display:none!important}
+html,body{background:var(--fon);color:var(--tekst)}
+body{font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased;
+  padding:12px 16px calc(24px + env(safe-area-inset-bottom));-webkit-tap-highlight-color:transparent}
+.cifra{font-variant-numeric:tabular-nums;white-space:nowrap}
+.shapka{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:4px 4px 12px}
+.shapka h1{font-size:22px;font-weight:700;letter-spacing:-.01em}
+.rezhim{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;padding:5px 10px;border-radius:999px;
+  background:color-mix(in srgb,#2fb36b 16%,transparent);color:#1f8f52}
+.rezhim::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.rezhim.pauza{background:color-mix(in srgb,var(--opasno) 14%,transparent);color:var(--opasno)}
+.obnovleno{font-size:12px;color:var(--tihiy);padding:0 4px 10px}
+.zag{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--zag);padding:14px 4px 6px}
+.karta{background:var(--karta);border-radius:14px;padding:14px 16px}
+.ryad{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.ryad+.ryad{margin-top:8px}
+.bolshoe{font-size:28px;font-weight:700;letter-spacing:-.01em}
+.podpis{font-size:13px;color:var(--tihiy)}
+.polosa{height:8px;border-radius:999px;background:var(--gran);overflow:hidden;margin-top:10px}
+.polosa i{display:block;height:100%;border-radius:inherit;background:var(--akcent);transition:width .4s ease}
+.polosa.zdorove i{background:var(--opasno)}
+.spisok{list-style:none}
+.spisok li{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-top:1px solid var(--gran)}
+.spisok li:first-child{border-top:0;padding-top:2px}
+.spisok .imya{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.spisok .zn{color:var(--tihiy)}
+.resursy{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.resurs{background:var(--karta);border-radius:14px;padding:12px 14px}
+.resurs b{display:block;font-size:20px;font-weight:700}
+.dela{list-style:none}
+.dela li{padding:8px 0;border-top:1px solid var(--gran);font-size:14px}
+.dela li:first-child{border-top:0;padding-top:0}
+.pult{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
+.pult button{font:inherit;font-size:15px;font-weight:600;height:46px;border:0;border-radius:12px;cursor:pointer;
+  background:var(--karta);color:var(--tekst)}
+.pult button.glavnaya{grid-column:1/-1;background:var(--akcent);color:var(--naakcente)}
+.pult button:active{opacity:.75}
+.zametka{font-size:13px;color:var(--tihiy);padding:10px 4px 0}
+.pusto{padding:40px 8px;text-align:center;color:var(--tihiy)}
+</style>
+</head>
+<body>
+<header class="shapka">
+  <h1>Тюряга</h1>
+  <span id="rezhim" class="rezhim">работает</span>
+</header>
+<p id="obnovleno" class="obnovleno"></p>
+
+<main id="vse" hidden>
+  <h2 class="zag">Уровень</h2>
+  <section class="karta">
+    <div class="ryad"><span class="bolshoe cifra" id="uroven"></span><span class="podpis cifra" id="avt"></span></div>
+    <div class="polosa" aria-hidden="true"><i id="polosaUr"></i></div>
+    <div class="ryad"><span class="podpis" id="doUr"></span><span class="podpis cifra" id="talanty"></span></div>
+  </section>
+
+  <h2 class="zag">Босс</h2>
+  <section class="karta" id="bossKarta">
+    <div class="ryad"><span class="bolshoe" id="bossImya"></span><span class="podpis cifra" id="bossDo"></span></div>
+    <div class="polosa zdorove" aria-hidden="true"><i id="polosaBoss"></i></div>
+    <div class="ryad"><span class="podpis cifra" id="bossHp"></span><span class="podpis cifra" id="bossUbito"></span></div>
+    <ul class="spisok" id="uronDruzey" style="margin-top:10px"></ul>
+  </section>
+
+  <h2 class="zag">Друзья</h2>
+  <section class="karta">
+    <div class="ryad"><span class="bolshoe cifra" id="druzey"></span><span class="podpis cifra" id="zayavki"></span></div>
+    <ul class="spisok" id="topDruzey" style="margin-top:10px"></ul>
+  </section>
+
+  <h2 class="zag">Запасы</h2>
+  <section class="resursy">
+    <div class="resurs"><span class="podpis">Энергия</span><b class="cifra" id="energiya"></b></div>
+    <div class="resurs"><span class="podpis">Сигареты</span><b class="cifra" id="sigarety"></b></div>
+    <div class="resurs"><span class="podpis">Рубли</span><b class="cifra" id="rubli"></b></div>
+    <div class="resurs"><span class="podpis">Бумага</span><b class="cifra" id="bumaga"></b></div>
+  </section>
+
+  <h2 class="zag">Календарь</h2>
+  <section class="karta"><span id="kalendar"></span></section>
+
+  <h2 class="zag">Последние действия</h2>
+  <section class="karta"><ul class="dela" id="dela"></ul></section>
+
+  <h2 class="zag">Пульт</h2>
+  <section class="pult" id="pult">
+    <button class="glavnaya" id="knStart" type="button">▶️ Включить бота</button>
+    <button id="knPauza2" type="button">⏸ На 2 часа</button>
+    <button id="knPauza" type="button">⏸ До включения</button>
+  </section>
+  <p class="zametka" id="pultZametka">Команда доходит до бота за 5 минут — столько ждать ближайшего прогона.</p>
+</main>
+
+<p id="pusto" class="pusto" hidden>Нет данных. Открой пульт кнопкой «Тюряга» в чате бота — он подставляет свежие цифры.</p>
+
+<script>
+"use strict";
+const tg = window.Telegram && window.Telegram.WebApp;
+if (tg) { tg.ready(); tg.expand(); }
+
+function prochitat() {
+  const h = location.hash.slice(1);
+  if (!h) return null;
+  try {
+    const b64 = h.replace(/-/g, "+").replace(/_/g, "/");
+    const bin = atob(b64 + "===".slice((b64.length + 3) % 4));
+    const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
+    return JSON.parse(new TextDecoder().decode(bytes));
+  } catch (e) { return null; }
+}
+const chislo = n => (n == null || n === "" ? "—" : Number(n).toLocaleString("ru-RU"));
+const ust = (id, t) => { document.getElementById(id).textContent = t; };
+function spisok(id, ryady) {
+  const ul = document.getElementById(id);
+  ul.replaceChildren(...ryady.map(([a, b]) => {
+    const li = document.createElement("li");
+    const s1 = document.createElement("span"); s1.className = "imya"; s1.textContent = a;
+    const s2 = document.createElement("span"); s2.className = "zn cifra"; s2.textContent = b;
+    li.append(s1, s2); return li;
+  }));
+  ul.hidden = !ryady.length;
+}
+
+const d = prochitat();
+if (!d) {
+  document.getElementById("pusto").hidden = false;
+} else {
+  document.getElementById("vse").hidden = false;
+  const rz = document.getElementById("rezhim");
+  if (d.p) { rz.classList.add("pauza"); rz.textContent = d.pd ? "пауза до " + d.pd : "на паузе"; }
+  ust("obnovleno", "Обновлено " + (d.t || "—") + " МСК");
+
+  ust("uroven", (d.l ?? "—") + " ур.");
+  ust("avt", chislo(d.a) + " авторитета");
+  const ot = d.a0 || 0, doo = d.a1 || 0, a = d.a || 0;
+  document.getElementById("polosaUr").style.width = doo > ot ? Math.min(100, Math.max(2, (a - ot) / (doo - ot) * 100)) + "%" : "0%";
+  ust("doUr", doo ? "до " + ((d.l || 0) + 1) + "-го: " + chislo(Math.max(0, doo - a)) : "");
+  ust("talanty", d.tl != null ? "талантов: " + d.tl : "");
+
+  const b = d.b;
+  if (b && b.n) {
+    ust("bossImya", b.n);
+    ust("bossDo", b.end ? "до " + b.end : "");
+    document.getElementById("polosaBoss").style.width = b.m ? Math.max(0, Math.min(100, b.h / b.m * 100)) + "%" : "0%";
+    ust("bossHp", chislo(b.h) + " / " + chislo(b.m));
+    ust("bossUbito", d.ub != null ? "боёв сегодня: " + d.ub : "");
+    spisok("uronDruzey", (b.f || []).map(([n, u]) => [n, chislo(u) + " урона"]));
+  } else {
+    ust("bossImya", "Боя нет");
+    ust("bossHp", "бот начнёт новый в ближайшие 5 минут");
+    document.getElementById("polosaBoss").style.width = "0%";
+    ust("bossUbito", d.ub != null ? "боёв сегодня: " + d.ub : "");
+    spisok("uronDruzey", []);
+  }
+
+  ust("druzey", chislo(d.dn) + " " + (["друг", "друга", "друзей"][(n => n % 10 === 1 && n % 100 !== 11 ? 0 : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? 1 : 2)(d.dn || 0)]));
+  ust("zayavki", d.dz != null ? "заявок сегодня: " + d.dz : "");
+  spisok("topDruzey", (d.dt || []).map(([n, a]) => [n, chislo(a)]));
+
+  ust("energiya", (d.e ?? "—") + " / " + (d.em ?? 50));
+  ust("sigarety", chislo(d.c));
+  ust("rubli", chislo(d.r));
+  ust("bumaga", chislo(d.pa));
+  ust("kalendar", d.k || "—");
+  const dela = document.getElementById("dela");
+  dela.replaceChildren(...(d.s || []).map(t => { const li = document.createElement("li"); li.textContent = t; return li; }));
+  if (!(d.s || []).length) dela.replaceChildren(Object.assign(document.createElement("li"), { textContent: "пока ничего" }));
+
+  document.getElementById("knStart").hidden = !d.p;
+  document.getElementById("knPauza").hidden = !!d.p;
+  document.getElementById("knPauza2").hidden = !!d.p;
+}
+
+// Пульт. Открыт кнопкой клавиатуры чата (у неё нет query_id) — sendData: команда уходит боту, окно закрывается.
+// Открыт кнопкой меню или sendData не сработал за 1,5 с — ссылка на бота с командой (/start pauza2).
+function komanda(tekst, kod) {
+  if (!tg || !tg.platform || tg.platform === "unknown") { alert("Открой пульт в Telegram — кнопкой «Тюряга» в чате бота."); return; }
+  if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred("light");
+  const zapasnoy = () => {
+    if (d && d.bot) { tg.openTelegramLink("https://t.me/" + d.bot + "?start=" + kod); setTimeout(() => tg.close(), 300); }
+    else tg.showAlert("Напиши боту: " + tekst);
+  };
+  if (!(tg.initDataUnsafe && tg.initDataUnsafe.query_id)) {
+    try { tg.sendData(tekst); } catch (e) { zapasnoy(); return; }
+    setTimeout(zapasnoy, 1500);                      // окно не закрылось — значит, sendData здесь не работает
+    return;
+  }
+  zapasnoy();
+}
+document.getElementById("knStart").onclick = () => komanda("старт", "pusk");
+document.getElementById("knPauza2").onclick = () => komanda("стоп 2", "pauza2");
+document.getElementById("knPauza").onclick = () => komanda("стоп", "pauza");
+</script>
+</body>
+</html>
