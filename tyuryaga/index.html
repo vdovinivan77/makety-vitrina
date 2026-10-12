@@ -204,7 +204,7 @@ details.cep>summary::-webkit-details-marker{display:none}
 .staroe{margin:8px 0 2px;padding:8px 12px;border-radius:5px;font-size:13.5px;color:#1d140d;background:var(--zhelt);box-shadow:0 2px 0 #8a7406}
 
 /* вкладки — тёмная кожа внизу, активная жёлтая, как кнопки игры */
-.vkladki{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;
+.vkladki{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px;
   padding:6px 6px calc(6px + var(--niz));
   background:linear-gradient(#3a2a1f,#1f160f);border-top:2px solid #120c08;
   box-shadow:0 -6px 16px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.08)}
@@ -216,7 +216,13 @@ details.cep>summary::-webkit-details-marker{display:none}
 .vkladki button[aria-selected="true"]{color:#1b130d;border-color:#1b130d;
   background:linear-gradient(#ffe45a,var(--zhelt) 55%,#d9b40e);box-shadow:0 2px 0 #1b130d}
 .vkladki button:active{transform:translateY(1px)}
-@media (max-width:350px){.vkladki button{font-size:9.5px}.vkladki button img{width:19px;height:19px}}
+@media (max-width:420px){.vkladki button{font-size:9.5px;letter-spacing:0}.vkladki button img{width:20px;height:20px}}
+@media (max-width:350px){.vkladki button{font-size:8.5px}.vkladki button img{width:18px;height:18px}}
+.kombo li{display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px dashed rgba(60,40,20,.25)}
+.kombo li:last-child{border-bottom:0}
+.kombo .ok{color:#2f6b1f}.kombo .net{color:#9b2a1c}.kombo .zhdi{color:var(--karandash)}
+.igla-chislo{font-size:30px;line-height:1}
+.zapasy.tri{grid-template-columns:repeat(3,minmax(0,1fr))}
 </style>
 </head>
 <body>
@@ -232,6 +238,7 @@ details.cep>summary::-webkit-details-marker{display:none}
   <section id="v-svodka" class="vkladka" role="tabpanel" aria-labelledby="t-svodka"></section>
   <section id="v-bossy" class="vkladka" role="tabpanel" aria-labelledby="t-bossy" hidden></section>
   <section id="v-druzya" class="vkladka" role="tabpanel" aria-labelledby="t-druzya" hidden></section>
+  <section id="v-obshchak" class="vkladka" role="tabpanel" aria-labelledby="t-obshchak" hidden></section>
   <section id="v-progress" class="vkladka" role="tabpanel" aria-labelledby="t-progress" hidden></section>
   <section id="v-zhurnal" class="vkladka" role="tabpanel" aria-labelledby="t-zhurnal" hidden></section>
   <section id="v-pult" class="vkladka" role="tabpanel" aria-labelledby="t-pult" hidden>
@@ -265,6 +272,7 @@ details.cep>summary::-webkit-details-marker{display:none}
   <button id="t-svodka" type="button" role="tab" aria-controls="v-svodka" aria-selected="true" data-v="svodka"><img alt="" src="https://oldprison-prod-assets-cdn-yandex.luckygem.online/assets/Guild/all/talantClanIcon.webp">Сводка</button>
   <button id="t-bossy" type="button" role="tab" aria-controls="v-bossy" aria-selected="false" data-v="bossy"><img alt="" src="https://oldprison-prod-assets-cdn-yandex.luckygem.online/assets/PrisonV3/weeklyTop/icon_Uron.webp">Боссы</button>
   <button id="t-druzya" type="button" role="tab" aria-controls="v-druzya" aria-selected="false" data-v="druzya"><img alt="" src="https://oldprison-prod-assets-cdn-yandex.luckygem.online/assets/Guild/all/clan_invite_icon.webp">Друзья</button>
+  <button id="t-obshchak" type="button" role="tab" aria-controls="v-obshchak" aria-selected="false" data-v="obshchak"><img alt="" src="https://oldprison-prod-assets-cdn-yandex.luckygem.online/assets/HUD/rubles.png">Общак</button>
   <button id="t-progress" type="button" role="tab" aria-controls="v-progress" aria-selected="false" data-v="progress"><img alt="" src="https://oldprison-prod-assets-cdn-yandex.luckygem.online/assets/HUD/authority.png">Прогресс</button>
   <button id="t-zhurnal" type="button" role="tab" aria-controls="v-zhurnal" aria-selected="false" data-v="zhurnal"><img alt="" src="https://oldprison-prod-assets-cdn-yandex.luckygem.online/assets/HUD/paper.png">Журнал</button>
   <button id="t-pult" type="button" role="tab" aria-controls="v-pult" aria-selected="false" data-v="pult"><img alt="" src="https://oldprison-prod-assets-cdn-yandex.luckygem.online/assets/FortuneScene/klutsi_icon.webp">Пульт</button>
@@ -815,6 +823,12 @@ function grafik(nazv, tochki, itog, plyus) {
 }
 function progress(d, v) {
   v.append(zag("Уровень"), kartaUrovnya(d));
+  v.append(zag("Цель стратегии"), celStrategii(d));
+  const ds = arr(d.ds);
+  if (ds.length) v.append(zag("Достижения"), list(
+    ryad(el("span", "bolshoe zek cifra", chislo(ds[0]) + " " + sklon(num(ds[0]), ["очко", "очка", "очков"]))),
+    polosa(num(ds[2]) ? num(ds[1]) / num(ds[2]) : 0, "tonk"),
+    ryad(podpis("до тушёнки: " + chislo(ds[1]) + " / " + chislo(ds[2]), "cifra"))));
 
   const zr = arr(d.zr);
   if (zr.length || str(d.zre)) {
@@ -841,6 +855,55 @@ function progress(d, v) {
   v.append(grafik("Авторитет за день", zaDen(1), prirost != null ? (prirost >= 0 ? "+" : "") + sokr(prirost) + " за " + h.length + " дн." : "", true));
   v.append(grafik("Убийства боссов", h.map(x => [x[0], x[4]]), "всего: " + chislo(h.reduce((s, x) => s + num(x[4]), 0))));
   v.append(grafik("Новые друзья", zaDen(3), chislo(pervyy[3]) + " → " + chislo(posl[3]), true));
+}
+
+// --- вкладка «Общак»: игла, комбо, оружие под комбо, валюта; цели стратегии (analiz/STRATEGIYA.md) ---
+const CELI = [["20.10", 31e3, 56e3], ["27.10", 60e3, 108e3], ["12.11", 125e3, 218e3]];   // [дата, без петли, с петлёй]
+function celStrategii(d) {
+  const a = num(d.a), petlya = !!num(d.pt);
+  const sled = CELI.find(c => a < (petlya ? c[2] : c[1])) || CELI[CELI.length - 1];
+  const cel = petlya ? sled[2] : sled[1];
+  return list(ryad(el("span", "zek", "к " + sled[0] + " — " + sokr(cel)), podpis(chislo(a) + " сейчас", "cifra")),
+    polosa(cel ? a / cel : 0, "tonk"),
+    ryad(podpis(petlya ? "план с петлёй Махно" : "план без покупки ключей (петля ждёт твоего «да»)")));
+}
+function obshchak(d, v) {
+  const ig = obj(d.ig);
+  if (!est(ig.o) && !arr(d.km).length) {
+    v.append(zag("Общак"), list(podpis("Данных об общаке ещё нет — появятся после ближайшего прогона бота.")));
+    return;
+  }
+  const ost = num(ig.o);
+  const igla = list(
+    ryad(el("span", "igla-chislo zek cifra", sokr(ost)), podpis("из 20 млн", "cifra")),
+    polosa(ost / 2e7, "zdorove"),
+    ryad(podpis(str(ig.sb) ? "сбор в " + str(ig.sb) + " МСК" : "", "cifra"),
+      podpis(str(ig.ko) ? "общак до " + str(ig.ko) + (est(ig.dn) ? " (" + ig.dn + " " + sklon(num(ig.dn), ["день", "дня", "дней"]) + ")" : "") : "", "cifra")));
+  if (est(ig.pt)) igla.append(ryad(podpis("сегодня потрачено " + sokr(ig.pt), "cifra")));
+  const ub = arr(ig.u).map(arr).filter(x => x.length);
+  if (ub.length) igla.append(el("p", "podpis", "убито иглой сегодня: " + ub.map(x => str(x[0]) + (num(x[1]) > 1 ? " ×" + x[1] : "")).join(", ")));
+  v.append(zag("Игла"), igla);
+
+  const km = arr(d.km).map(arr).filter(x => x.length);
+  const kl = { "1": "ok", "-1": "net", "0": "zhdi" };
+  v.append(zag("Комбо"), list(km.length
+    ? el("ul", "kombo", ...km.map(x => el("li", "", el("span", "zek", str(x[0]) + " · " + str(x[1])),
+        el("span", "podpis " + (kl[String(num(x[3]))] || "zhdi"), str(x[2])))))
+    : podpis("Сегодня комбо не было. Перешли разгадку боту в чат — он пробьёт сам.")));
+
+  const or = arr(d.or);
+  const plashka = (imya, n, pod) => el("div", "zapas", el("div", "", el("span", "", imya), el("b", "cifra", est(n) ? chislo(n) : "—"),
+    pod ? el("span", "podpis", pod) : null));
+  v.append(zag("Оружие под комбо"), el("section", "zapasy tri",
+    plashka("Финки", or[0]), plashka("Самопал", or[1]), plashka("Яд", or[2])));
+  v.append(zag("Валюта"), el("section", "zapasy tri",
+    plashka("Рубли", d.r, "перезарядка в комбо — 3"), plashka("Чифир", d.ch, "пьёт сам"), plashka("Мыло", d.my, "не трогаем")));
+
+  const h = arr(ig.h).map(arr).filter(x => x.length);
+  if (h.length) v.append(zag("Сборы общака"), list(el("ul", "dela", ...h.slice(-5).reverse().map(x => {
+    const [den, chas] = str(x[0]).split(" ");
+    return el("li", "", el("span", "vr cifra", chas || den), el("span", "tx", (chas ? den + " · " : "") + "игла " + sokr(x[1]) + " → " + sokr(x[2])));
+  }))));
 }
 
 // --- вкладка «Журнал» ---
@@ -874,7 +937,7 @@ const OSHIBKI = {
 let OSHIBKA = null;
 
 // --- вкладки ---
-const VKLADKI = ["svodka", "bossy", "druzya", "progress", "zhurnal", "pult"];
+const VKLADKI = ["svodka", "bossy", "druzya", "obshchak", "progress", "zhurnal", "pult"];
 const PAMYAT = "tyuryaga_vkladka";
 let aktivnaya = "svodka";
 function pokazat(imya, bezProkrutki) {
@@ -924,6 +987,7 @@ let D = null;
     bezopasno("v-svodka", v => svodka(D, v));
     bezopasno("v-bossy", v => bossy(D, v, moy));
     bezopasno("v-druzya", v => druzya(D, v, moy));
+    bezopasno("v-obshchak", v => obshchak(D, v));
     bezopasno("v-progress", v => progress(D, v));
     bezopasno("v-zhurnal", v => zhurnal(D, v));
   } else {
