@@ -59,6 +59,8 @@ body{min-height:100vh;color:var(--krem);font:15px/1.4 Calibri,"Segoe UI",system-
 
 /* босс — на фоне ростовой линейки */
 .boss{display:grid;grid-template-columns:76px 1fr;gap:14px;align-items:center}
+.boss>div{min-width:0}
+.boss .ryad{flex-wrap:wrap;row-gap:2px}
 .lineyka{width:76px;height:86px;border-radius:3px;display:grid;place-items:end center;padding-bottom:8px;
   background:url("https://oldprison-prod-assets-cdn-yandex.luckygem.online/assets/PrisonV3/bosses/avatarbgBoss/bgAvatarBoss1.png") center/cover;
   box-shadow:0 2px 6px rgba(0,0,0,.35)}
@@ -84,6 +86,7 @@ body{min-height:100vh;color:var(--krem);font:15px/1.4 Calibri,"Segoe UI",system-
 .pult button:active{transform:translateY(2px);box-shadow:0 1px 0 #1b130d}
 .zametka{font-size:12.5px;color:#bfae93;padding:10px 4px 0;text-shadow:0 1px 2px #000}
 .pusto{margin-top:24px;padding:28px 18px;text-align:center}
+.staroe{margin:8px 0 2px;padding:8px 12px;border-radius:5px;font-size:13.5px;color:#1d140d;background:var(--zhelt);box-shadow:0 2px 0 #8a7406}
 </style>
 </head>
 <body>
@@ -92,6 +95,7 @@ body{min-height:100vh;color:var(--krem);font:15px/1.4 Calibri,"Segoe UI",system-
   <span id="rezhim" class="shtamp zek">работает</span>
 </header>
 <p id="obnovleno" class="obnovleno"></p>
+<p id="staroe" class="staroe" hidden></p>
 
 <main id="vse" hidden>
   <h2 class="zag zek">Уровень</h2>
@@ -137,7 +141,7 @@ body{min-height:100vh;color:var(--krem);font:15px/1.4 Calibri,"Segoe UI",system-
     <button id="knPauza2" type="button">Пауза 2 часа</button>
     <button id="knPauza" type="button">Пауза</button>
   </section>
-  <p class="zametka" id="pultZametka">Команда доходит до бота за 5 минут — столько ждать ближайшего прогона.</p>
+  <p class="zametka" id="pultZametka">Бот ответит в чате, обычно за 5 минут, иногда до 10. Дождись ответа «⏸ на паузе» — потом играй сам.</p>
 </main>
 
 <p id="pusto" class="pusto list" hidden>Нет данных. Открой пульт кнопкой «Тюряга» в чате бота — он подставляет свежие цифры.</p>
@@ -148,7 +152,8 @@ const tg = window.Telegram && window.Telegram.WebApp;
 if (tg) { tg.ready(); tg.expand(); try { tg.setHeaderColor("#0d0b09"); tg.setBackgroundColor("#0d0b09"); } catch (e) {} }
 
 function prochitat() {
-  const h = location.hash.slice(1);
+  // Telegram дописывает к фрагменту свои параметры (#данные?tgWebAppData=…&…) — в base64url нет «?» и «&»
+  const h = location.hash.slice(1).split(/[?&]/)[0];
   if (!h) return null;
   try {
     const b64 = h.replace(/-/g, "+").replace(/_/g, "/");
@@ -178,6 +183,15 @@ if (!d) {
   const rz = document.getElementById("rezhim");
   if (d.p) { rz.classList.add("pauza"); rz.textContent = d.pd ? "пауза до " + d.pd : "на паузе"; }
   ust("obnovleno", "Обновлено " + (d.t || "—") + " МСК");
+  if (d.ts) {
+    const min = Math.round((Date.now() / 1000 - d.ts) / 60);
+    if (min > 15) {
+      const st = document.getElementById("staroe");
+      st.textContent = "Цифры " + (min < 120 ? min + " мин" : Math.round(min / 60) + " ч") +
+        " назад. Свежие — в кнопке меню «Тюряга» слева от поля ввода.";
+      st.hidden = false;
+    }
+  }
 
   ust("uroven", (d.l ?? "—") + " ур.");
   ust("avt", chislo(d.a) + " авторитета");
@@ -216,9 +230,7 @@ if (!d) {
   dela.replaceChildren(...(d.s || []).map(t => { const li = document.createElement("li"); li.textContent = t; return li; }));
   if (!(d.s || []).length) dela.replaceChildren(Object.assign(document.createElement("li"), { textContent: "пока ничего" }));
 
-  document.getElementById("knStart").hidden = !d.p;
-  document.getElementById("knPauza").hidden = !!d.p;
-  document.getElementById("knPauza2").hidden = !!d.p;
+  // все три кнопки — всегда: режим в данных может отставать от настоящего
 }
 
 // Пульт. Открыт кнопкой клавиатуры чата (у неё нет query_id) — sendData: команда уходит боту, окно закрывается.
@@ -235,7 +247,8 @@ function komanda(tekst, kod) {
     setTimeout(zapasnoy, 1500);                      // окно не закрылось — значит, sendData здесь не работает
     return;
   }
-  zapasnoy();
+  tg.showConfirm("Команда уйдёт ссылкой на бота. Если в чате появится кнопка «Запустить» — нажми её. Надёжнее — кнопка «📊 Тюряга» под полем ввода. Отправить?",
+    ok => { if (ok) zapasnoy(); });
 }
 document.getElementById("knStart").onclick = () => komanda("старт", "pusk");
 document.getElementById("knPauza2").onclick = () => komanda("стоп 2", "pauza2");
