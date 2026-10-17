@@ -223,6 +223,38 @@ details.cep>summary::-webkit-details-marker{display:none}
 .kombo .ok{color:#2f6b1f}.kombo .net{color:#9b2a1c}.kombo .zhdi{color:var(--karandash)}
 .igla-chislo{font-size:30px;line-height:1}
 .zapasy.tri{grid-template-columns:repeat(3,minmax(0,1fr))}
+
+/* очередь боссов и калькулятор талантов — поля на бумаге; значки ↑↓✕ — системным шрифтом (в шрифте игры их нет).
+   Шрифт полей — 16 px: мельче iPhone при касании увеличивает страницу. */
+.pole{font:16px/1.2 Calibri,"Segoe UI",system-ui,-apple-system,sans-serif;color:var(--chernila);min-width:0;max-width:100%;height:36px;
+  padding:4px 6px;border:1.5px solid #6b5d4f;border-radius:4px;background:rgba(255,250,238,.75)}
+.och-zn{flex:1;min-width:0;align-self:center;font-size:14px;color:var(--chernila)}
+.och .mesto{font-size:12.5px;color:var(--karandash);flex:none}
+.och-ver{display:flex;align-items:center;gap:6px;min-width:0}
+.och-ver .imya{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.och-kn{display:flex;gap:4px;flex:none}
+.och-kn button,.och-forma button{min-width:30px;height:30px;padding:0 6px;border:1.5px solid #1b130d;border-radius:4px;cursor:pointer;
+  font:15px/1 system-ui,-apple-system,sans-serif;color:#1b130d;background:linear-gradient(#ffe45a,var(--zhelt) 55%,#d9b40e);box-shadow:0 2px 0 #1b130d}
+.och-kn button:disabled{opacity:.3;cursor:default;box-shadow:none}
+.och-kn button:not(:disabled):active,.och-forma button:active{transform:translateY(1px);box-shadow:0 1px 0 #1b130d}
+.och-pol{display:flex;gap:6px;margin:6px 0 4px}
+.och-pol .pole:first-child{flex:1}
+.och-raz{width:64px;flex:none}
+.och .podpis+.podpis{margin-top:2px}
+.och-forma{display:grid;grid-template-columns:minmax(0,1fr) 64px auto;gap:6px}
+.och-forma .shir{grid-column:1/-1}
+.och-forma button{height:36px;padding:0 12px;font:14px/1 "PrisonFont",Impact,sans-serif;text-transform:uppercase;letter-spacing:.02em}
+.och-pred{margin-top:8px}
+.och-pred:empty{display:none}
+.och-knopki{margin-top:10px}
+.podpis .limit,.podpis.limit{color:var(--krov)}
+.kalk-cel{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px}
+.kalk-cel .pole{width:96px;text-align:right}
+.kalk input[type=range]{display:block;width:100%;margin:10px 0 6px;accent-color:var(--oranzh)}
+.kalk .spisok{margin-top:10px}
+.kalk .spisok .zn{flex:none}
+.kalk .spisok b{font-size:15px;color:#231a12}
+.kalk .zametka-list{margin-top:8px;font-size:12.5px}
 </style>
 </head>
 <body>
@@ -354,7 +386,11 @@ const BOSSY_SYRYE = [
 const ROD = { 1: "Кирпича", 2: "Сизого", 3: "Махно", 4: "Лютого", 5: "Шайбы", 6: "Бурята", 7: "Дяди Миши", 8: "Хирурга",
   17: "Бугра", 19: "Гастролёра", 25: "Пресса", 31: "Змея", 42: "Старшого", 9: "Палыча", 10: "Циклопа", 11: "Раисы",
   12: "Беса", 13: "Паленого", 14: "Близнецов", 15: "Борзова", 16: "Дюбеля", 20: "Конвоя", 30: "Чугуна", 44: "Кнута",
-  47: "Ёхана", 54: "Сыча", 32: "Жестянщиков", 34: "Боцмана", 35: "Жульбанов", 46: "Чебота" };
+  47: "Ёхана", 54: "Сыча", 32: "Жестянщиков", 34: "Боцмана", 35: "Жульбанов", 46: "Чебота",
+  // остальные — для условий очереди («после Змея, Креста»)
+  18: "Креста", 21: "Бандяка", 23: "Гризли", 26: "Севера", 27: "Фени", 29: "Немого", 37: "Бидона", 39: "Воркуты", 40: "Абу",
+  41: "Мазая", 45: "Гвоздя", 53: "Полтоса", 22: "Бульдозера", 24: "Кусто", 28: "Цербера", 38: "Фина", 48: "Дантиста",
+  55: "Грома", 33: "Отбоя", 36: "Шнифера", 43: "Бивня", 49: "Контрабаса", 50: "Ташкента", 51: "Крюгера", 52: "Бельмондо" };
 const KAT = { 1: "основная", 2: "вторая", 3: "третья" };
 const REZH = { p: ["/PrisonV3/bosses/Icon/icon_pacan.png", "пацанский"], b: ["/PrisonV3/bosses/Icon/icon_blatnoy.png", "блатной"],
   a: ["/common/avtoritetny_icon.webp", "авторитетный"], v: ["/PrisonV3/bosses/Icon/icon_vorovskoy.png", "воровской"],
@@ -669,6 +705,8 @@ function bossy(d, v, moy) {
       : el("p", "zametka", "Ключей нет — их дают за убийства боссов."));
   }
 
+  bezopasnoChast(v, () => ocheredBlok(d, v));           // очередь сломалась — цепочки ниже всё равно видны
+
   const leg = el("p", "zametka legenda", "Режимы:");
   for (const k of "pbavg") { const i = kartinka(A + REZH[k][0], "", ""); i.onerror = () => i.remove(); leg.append(i, REZH[k][1]); }
   v.append(leg);
@@ -704,6 +742,277 @@ function kartochka(x, s, d, lim) {
   if (x.pom === "pr") dob("приходящий");
   if (info.childNodes.length) t.append(info);
   return el("li", "bk" + (s.zakryt ? " zakryt" : "") + (s.c === "boy" ? " tek" : ""), lineyka(x.id, x.kat, "mal"), t);
+}
+
+// --- очередь боссов по слову владельца (d.q; команды «ochered» и «ochered_sbros» уходят боту через sendData).
+// Бот начинает эти бои сразу после комбо и боёв иглой, до боёв на друзей, — первый по порядку, которого можно начать.
+// «Одежда — авто»: младший режим с недобранной одеждой, который друзья добьют за 7 ч (скорость друзей знает только бот).
+// Версия очереди d.qv уходит с каждой командой: очередь у бота изменилась после открытия пульта (бот начал бой, вычеркнул
+// строку, пришла другая команда) — бот ничего не меняет и отвечает нынешней очередью. ---
+const REZH_KOD = { pacansky: "p", blotnoy: "b", avtoritetny: "a", vorovskoy: "v" };   // режим бота → буква справочника
+const REZH_IMYA = { p: "pacansky", b: "blotnoy", a: "avtoritetny", v: "vorovskoy" };
+const REZH_PROCHIE = { odin: "в одного", brigade: "бригадный" };                // режимы, которые страница не ставит, но показывает
+const MNOZH = { p: 1, b: 3, a: 6, v: 12 };                 // множитель здоровья режима (KARTA.md)
+const VID_SETA = { c: "одежда", t: "наколки" };
+const OCH_MAKS = 30, RAZ_MAKS = 20;                        // столько же проверяет бот
+const SENDDATA_MAKS = 4096;                                // больше байт Telegram в sendData не пропустит
+// правка на странице: [{id, rezh, raz, sila, usl, uslSyroe, chtenie, razSyroy}]; chtenie — режим, который страница не
+// ставит («в одного»): строка показывается без выбора и уходит боту как пришла
+let OCHERED = [];
+const rezhimRu = r => (r === "odezhda" ? "одежда — авто" : REZH_KOD[r] ? REZH[REZH_KOD[r]][1] : REZH_PROCHIE[r] || str(r));
+const mozhnoMenyat = r => !!REZH_KOD[r] || r === "odezhda";
+const versiyaOcheredi = d => (est(d.qv) && Number.isInteger(Number(d.qv)) ? Number(d.qv) : null);   // нет — null, бот переспросит
+const imyaBossa = id => (BOSS[id] ? BOSS[id].imya : "№" + id);
+// режимы для очереди — без бригадного (бот его сюда не ставит); босса нет в справочнике страницы — пацанский
+const rezhimyBossa = id => (BOSS[id] ? [...BOSS[id].rezh].filter(k => MNOZH[k]) : ["p"]);
+const skolkoRaz = x => Math.min(RAZ_MAKS, Math.max(1, Math.round(num(x)) || 1));
+const setyEst = d => Object.keys(obj(d.st)).length > 0;   // старый бот сетов не присылает
+
+// сеты босса в режиме (d.st: {id: {буква: [[вид, есть, всего, имя], …]}}) — мусор из подделки отсеиваем
+function setyBossa(d, id, m) {
+  return arr(obj(obj(d.st)[id])[m]).map(arr).filter(x => str(x[0]) && est(x[1]) && est(x[2]))
+    .map(x => ({ vid: str(x[0]), est: num(x[1]), vsego: num(x[2]), imya: str(x[3]).slice(0, 20) }));
+}
+// «одежда — авто» → буква младшего режима с недобранной одеждой; null — одежда собрана везде; undefined — сетов в данных нет
+function odezhdaRezhim(d, id) {
+  if (!setyEst(d)) return undefined;
+  return rezhimyBossa(id).find(m => setyBossa(d, id, m).some(x => x.vid === "c" && x.est < x.vsego)) || null;
+}
+// условия строки (5-й элемент d.q): {ot: "ЧЧ:ММ" — не раньше, posle: [id] — после убитых сегодня, c: 1 — цепочкой}.
+// Для показа — только годное; боту возвращается то, что пришло (uslSyroe), без правок.
+function usloviya(u) {
+  u = obj(u);
+  const ot = typeof u.ot === "string" && /^\d\d:\d\d$/.test(u.ot) ? u.ot : "";
+  const posle = arr(u.posle).map(celoe).filter(Boolean);
+  return { ot, posle, c: u.c === true || num(u.c) === 1 };
+}
+function usloviyaTekst(u) {                                // «не раньше 00:10 · после Змея, Креста · цепочкой»
+  const out = [];
+  if (u.ot) out.push("не раньше " + u.ot);
+  if (u.posle.length) out.push("после " + u.posle.map(id => ROD[id] || imyaBossa(id)).join(", "));
+  if (u.c) out.push("цепочкой");
+  return out.join(" · ");
+}
+function ocheredIzDannyh(d) {                              // d.q: [[id, режим, раз, сила01, условия], …]
+  return arr(d.q).map(arr).map(x => {
+    const rezh = str(x[1]), uslSyroe = obj(x[4]);
+    return { id: celoe(x[0]), rezh, raz: skolkoRaz(x[2]), razSyroy: x[2] == null ? 1 : x[2], sila: num(x[3]) ? 1 : 0,
+      usl: usloviya(uslSyroe), uslSyroe, chtenie: !mozhnoMenyat(rezh) };
+  }).filter(x => x.id && x.rezh).slice(0, OCH_MAKS);
+}
+// строка команды: [id, режим, раз, условия]; строка «только чтение» — как пришла от бота
+const strokaKomandy = x => (x.chtenie ? [x.id, x.rezh, x.razSyroy, x.uslSyroe] : [x.id, x.rezh, skolkoRaz(x.raz), x.uslSyroe]);
+const komandaOcheredi = (stroki, qv) => ({ cmd: "ochered", qv, q: stroki.slice(0, OCH_MAKS).map(strokaKomandy) });
+const komandaSbrosa = qv => ({ cmd: "ochered_sbros", qv });
+// режим «Добавить бой» после смены босса: прежний — если он есть у нового босса (или «одежда — авто»), иначе пацанский
+const rezhimDlyaBossa = (id, pred) => (pred === "odezhda" || rezhimyBossa(id).map(k => REZH_IMYA[k]).includes(pred) ? pred : "pacansky");
+
+// по строкам очереди: здоровье в режиме, ключи входа и бои дня — нарастающим итогом сверху вниз
+// (ключи, которые дадут убийства из самой очереди, не учитываются)
+function raschetOcheredi(d, stroki) {
+  const bk = obj(d.bk), klyuchi = obj(bk.keys), dw = obj(bk.dw), lim = num(bk.lim) || 7, znaem = bkEst(d);
+  const nuzhno = {}, boi = {};
+  return stroki.map(x => {
+    const b = BOSS[x.id], m = x.rezh === "odezhda" ? odezhdaRezhim(d, x.id) : REZH_KOD[x.rezh];
+    const r = { m, mn: m ? MNOZH[m] : 0, hp: b && m ? b.hp * MNOZH[m] : 0, lim, znaem, st: b ? status(b, d) : null };
+    if (b && b.src) {
+      nuzhno[b.src] = (nuzhno[b.src] || 0) + b.nado * x.raz;
+      Object.assign(r, { src: b.src, nado: b.nado, est: num(klyuchi[b.src]), nuzhno: nuzhno[b.src] });
+      r.malo = znaem && r.est < r.nuzhno;
+    }
+    boi[x.id] = (boi[x.id] || 0) + x.raz;
+    r.boi = num(dw[x.id]); r.boiPosle = r.boi + boi[x.id];
+    r.perebor = znaem && r.boiPosle > lim;
+    return r;
+  });
+}
+// что даёт строка: режим, здоровье, награда, вход, бои дня, сеты режима
+function opisanieStroki(d, id, rezh, r) {
+  const b = BOSS[id], out = [];
+  const info = el("div", "podpis");
+  const dob = (tekst, plokho) => { if (info.childNodes.length) info.append(" · "); info.append(el("span", "cifra" + (plokho ? " limit" : ""), tekst)); };
+  if (rezh === "odezhda") out.push(el("div", "podpis" + (r.m === null ? " limit" : ""),
+    r.m ? "сейчас недобрана одежда в режиме «" + REZH[r.m][1] + "»" : r.m === null ? "одежда собрана во всех режимах — бот строку пропустит" : "режим выберет бот"));
+  if (r.hp) dob(nbsp(sokr(r.hp)) + " здоровья" + (r.mn > 1 ? " (×" + r.mn + ")" : ""));
+  if (r.st && r.st.c === "zakryt") dob(r.st.t, true);
+  if (r.src) {
+    dob("вход: " + r.nado + " кл. " + (ROD[r.src] || "№" + r.src));
+    if (r.znaem) { dob("есть " + r.est, r.malo); if (r.nuzhno > r.nado) dob("на очередь " + r.nuzhno, r.malo); }
+  }
+  if (r.znaem) dob("бои сегодня " + r.boi + "/" + r.lim + (r.boiPosle > r.boi ? " → " + r.boiPosle : ""), r.perebor);
+  if (info.childNodes.length) out.push(info);
+  if (b) out.push(el("div", "podpis", "награда: " + nagrada(b)));
+  if (setyEst(d) && r.m) {
+    const sety = setyBossa(d, id, r.m);
+    if (!sety.length) out.push(el("div", "podpis", "сетов в этом режиме нет"));
+    sety.forEach(x => out.push(el("div", "podpis", (VID_SETA[x.vid] || "прочее") + " «" + x.imya + "» — " +
+      (x.vsego && x.est >= x.vsego ? "собран ✓" : x.est + " из " + x.vsego))));
+  }
+  return out;
+}
+function opciya(znach, tekst, vybrana) {
+  const o = el("option", "", tekst);
+  o.value = znach;
+  if (vybrana) o.selected = true;
+  return o;
+}
+function zapolnitRezhimy(s, id, tek) {
+  const spis = rezhimyBossa(id).map(k => REZH_IMYA[k]);
+  if (REZH_KOD[tek] && !spis.includes(tek)) spis.push(tek);   // из очереди бота — режим, которого нет в справочнике страницы
+  spis.push("odezhda");
+  s.replaceChildren(...spis.map(k => opciya(k, rezhimRu(k), k === tek)));
+}
+function vyborRezhima(id, tek) {
+  const s = el("select", "pole");
+  s.setAttribute("aria-label", "режим");
+  zapolnitRezhimy(s, id, tek);
+  return s;
+}
+function vyborRaz(tek) {
+  const s = el("select", "pole och-raz");
+  s.setAttribute("aria-label", "сколько раз");
+  for (let k = 1; k <= RAZ_MAKS; k++) s.append(opciya(String(k), "×" + k, k === tek));
+  return s;
+}
+// в списке выбора: ✓ — можно начать сейчас, ✗ — закрыт, нет ключей или лимит дня, · — ключи неизвестны (старые данные)
+function metkaBossa(b, d) {
+  const st = status(b, d), bk = obj(d.bk), lim = num(bk.lim) || 7, dw = num(obj(bk.dw)[b.id]), znaem = bkEst(d);
+  const limit = znaem && dw >= lim;
+  const znak = st.zakryt || limit ? "✗" : st.c === "nuzhno" ? "·" : "✓";
+  return znak + " " + b.imya + " — " + st.t + (znaem ? ", бои " + dw + "/" + lim : "") + (b.pom === "pr" ? ", приходящий" : "");
+}
+function vyborBossa(d) {
+  const s = el("select", "pole shir");
+  s.setAttribute("aria-label", "босс");
+  s.append(opciya("", "— выбери босса —", true));
+  for (const kat of [1, 2, 3]) {
+    const g = el("optgroup");
+    g.label = "Цепочка " + kat + " — " + KAT[kat];
+    poryadok(kat).forEach(b => g.append(opciya(String(b.id), metkaBossa(b, d))));
+    s.append(g);
+  }
+  return s;
+}
+function strokaOcheredi(d, x, r, i, pereris) {
+  const n = OCHERED.length;
+  const kn = (znak, nazv, fn, nelzya) => {
+    const k = el("button", "", znak);
+    k.type = "button"; k.title = nazv; k.setAttribute("aria-label", nazv); k.disabled = !!nelzya;
+    k.onclick = () => { tuk(); fn(); pereris(); };
+    return k;
+  };
+  const sdvig = s => { const [y] = OCHERED.splice(i, 1); OCHERED.splice(i + s, 0, y); };
+  let pol;
+  if (x.chtenie) {                                         // режим, который страница не ставит, — без выбора, уйдёт как есть
+    pol = el("div", "och-pol", el("span", "och-zn", rezhimRu(x.rezh) + (x.raz > 1 ? " ×" + x.raz : "")));
+  } else {
+    const rz = vyborRezhima(x.id, x.rezh), sk = vyborRaz(x.raz);
+    rz.onchange = () => { x.rezh = rz.value; pereris(); };
+    sk.onchange = () => { x.raz = skolkoRaz(sk.value); pereris(); };
+    pol = el("div", "och-pol", rz, sk);
+  }
+  const usl = usloviyaTekst(x.usl);
+  const t = el("div", "",
+    el("div", "och-ver", el("span", "mesto cifra", (i + 1) + "."), el("b", "zek imya", imyaBossa(x.id)),
+      el("span", "och-kn", kn("↑", "выше", () => sdvig(-1), i === 0), kn("↓", "ниже", () => sdvig(1), i === n - 1),
+        kn("✕", "убрать", () => OCHERED.splice(i, 1)))),
+    pol,
+    usl ? el("div", "podpis", usl) : null,
+    ...opisanieStroki(d, x.id, x.rezh, r));
+  if (x.chtenie) t.append(el("div", "podpis", "режим «" + rezhimRu(x.rezh) + "» тут не меняется — строка уйдёт боту как есть"));
+  if (!x.sila) t.append(el("div", "podpis", "сейчас стоит «если друзья добьют за 7 ч»; после «Поставить очередь» — сразу после комбо"));
+  return el("li", "bk och", lineyka(x.id, BOSS[x.id] ? BOSS[x.id].kat : 1, "mal"), t);
+}
+
+// команда боту. sendData работает, только если пульт открыт кнопкой клавиатуры «📊 Тюряга» (у неё нет query_id);
+// ссылка-запасной с /start, как у «Стоп/Старт», очередь не унесёт — только подсказка
+const SENDDATA_PODSKAZKA = "Очередь уходит боту, только если пульт открыт кнопкой «📊 Тюряга» под полем ввода в чате. " +
+  "Из кнопки меню слева от поля бот команду не получит — закрой пульт и открой той кнопкой.";
+function prichinaBezSendData() {
+  if (!tg || !tg.platform || tg.platform === "unknown") return "Поставить очередь можно только из Telegram — кнопкой «📊 Тюряга» под полем ввода в чате бота.";
+  if ((tg.initDataUnsafe && tg.initDataUnsafe.query_id) || typeof tg.sendData !== "function") return SENDDATA_PODSKAZKA;
+  return "";
+}
+function soobshchit(t) {
+  try { if (tg && tg.showAlert && verOk("6.2")) { tg.showAlert(t); return; } } catch (e) {}
+  alert(t);
+}
+function podtverdit(t, fn) {
+  try { if (tg && tg.showConfirm && verOk("6.2")) { tg.showConfirm(t.slice(0, 250), ok => { if (ok) fn(); }); return; } } catch (e) {}
+  if (confirm(t)) fn();
+}
+function otpravitBotu(kom) {
+  const pr = prichinaBezSendData();
+  if (pr) { soobshchit(pr); return; }
+  const json = JSON.stringify(kom);
+  if (new TextEncoder().encode(json).length > SENDDATA_MAKS) { soobshchit("Очередь не влезает в одну команду Telegram — убери часть строк."); return; }
+  tuk();
+  try { tg.sendData(json); } catch (e) { soobshchit(SENDDATA_PODSKAZKA); return; }
+  setTimeout(() => soobshchit(SENDDATA_PODSKAZKA), 1500);   // окно не закрылось — значит, sendData здесь не работает
+}
+
+function ocheredBlok(d, v) {
+  OCHERED = ocheredIzDannyh(d);
+  v.append(zag("Очередь на сегодня"));
+  const spisok = el("div", "");
+  const bossV = vyborBossa(d), rezhV = vyborRezhima(0, "pacansky"), razV = vyborRaz(1), pred = el("div", "och-pred");
+  const predprosmotr = () => {                             // что даст выбранное, с учётом уже стоящей очереди
+    const id = celoe(bossV.value);
+    if (!id) { pred.replaceChildren(); return; }
+    const x = { id, rezh: rezhV.value, raz: skolkoRaz(razV.value) };
+    pred.replaceChildren(...opisanieStroki(d, id, x.rezh, raschetOcheredi(d, [...OCHERED, x]).pop()));
+  };
+  const pereris = () => {
+    const rr = raschetOcheredi(d, OCHERED);
+    const li = OCHERED.map((x, i) => strokaOcheredi(d, x, rr[i], i, pereris));
+    spisok.replaceChildren(...(li.length ? listy(li, 2, "bk-spisok")
+      : [list(podpis("q" in d ? "Очереди на сегодня нет — бот выбирает боссов сам. Добавь бои ниже."
+        : "Бот пока не присылает очередь — она покажется после ближайшего прогона. Поставить новую можно и сейчас."))]));
+    predprosmotr();
+  };
+  bossV.onchange = () => { const id = celoe(bossV.value); zapolnitRezhimy(rezhV, id, rezhimDlyaBossa(id, rezhV.value)); predprosmotr(); };
+  rezhV.onchange = predprosmotr;
+  razV.onchange = predprosmotr;
+  const dobavit = el("button", "", "Добавить");
+  dobavit.type = "button";
+  dobavit.onclick = () => {
+    const id = celoe(bossV.value);
+    if (!id) { bossV.focus(); return; }
+    if (OCHERED.length >= OCH_MAKS) { soobshchit("В очереди уже " + OCH_MAKS + " строк — больше бот не примет."); return; }
+    tuk();
+    OCHERED.push({ id, rezh: rezhV.value, raz: skolkoRaz(razV.value), sila: 1, usl: usloviya({}), uslSyroe: {}, chtenie: false });
+    pereris();
+  };
+  pereris();
+  v.append(spisok, list(el("b", "zek grafik-zag", "Добавить бой"), el("div", "och-forma", bossV, rezhV, razV, dobavit), pred));
+
+  const postavit = el("button", "", "Поставить очередь"), ochistit = el("button", "", "Очистить");
+  postavit.type = ochistit.type = "button";
+  const qv = versiyaOcheredi(d);
+  postavit.onclick = () => {
+    const pr = prichinaBezSendData();
+    if (pr) { soobshchit(pr); return; }
+    if (!OCHERED.length) { soobshchit("Очередь пуста. Снять сегодняшнюю очередь у бота — кнопкой «Очистить»."); return; }
+    const boev = OCHERED.reduce((s, x) => s + x.raz, 0);
+    // в окне подтверждения Telegram — до 250 знаков: длинный список имён режется, итог и предупреждение — всегда целиком
+    const hvost = "? Прежняя очередь заменится, если у бота она не менялась после открытия пульта.";
+    let imena = OCHERED.map(x => imyaBossa(x.id) + (x.raz > 1 ? " ×" + x.raz : "")).join(", ");
+    const golova = "Поставить на сегодня " + boev + " " + sklon(boev, ["бой", "боя", "боёв"]) + ": ";
+    if ((golova + imena + hvost).length > 250) imena = imena.slice(0, Math.max(0, 249 - golova.length - hvost.length)) + "…";
+    podtverdit(golova + imena + hvost, () => otpravitBotu(komandaOcheredi(OCHERED, qv)));
+  };
+  ochistit.onclick = () => {
+    const pr = prichinaBezSendData();
+    if (pr) { soobshchit(pr); return; }
+    podtverdit("Очистить очередь на сегодня? Бот вернётся к своему выбору боссов.", () => otpravitBotu(komandaSbrosa(qv)));
+  };
+  v.append(el("section", "pult och-knopki", postavit, ochistit));
+  const pr = prichinaBezSendData();
+  v.append(el("p", "zametka", (pr ? pr + " " : "") + "Бот сверит очередь со своей нынешней: если она изменилась после открытия " +
+    "пульта (бот начал бой из очереди, вычеркнул строку или пришла другая команда), он ничего не поменяет и пришлёт в чат " +
+    "очередь как есть. После ответа бота открывай «📊 Тюряга» из его сообщения — там свежая очередь, и ставить заново " +
+    "нужно оттуда. Бот берёт первый бой сверху, который можно начать: сразу после комбо и боёв иглой, до боёв на друзей. " +
+    "Ключи, которые дадут убийства из очереди, тут не учтены."));
 }
 
 // живая голова текущего босса: лист кадров + порядок кадров из config_1.json; нет листа — остаётся неподвижный портрет
@@ -821,8 +1130,160 @@ function grafik(nazv, tochki, itog, plyus) {
   });
   return list(ryad(el("b", "zek grafik-zag", nazv), podpis(itog || "", "cifra")), g);
 }
+// --- калькулятор талантов (d.tl2, d.tp, d.ud, d.oz): каждое очко стоит своего урона по боссам, порог растёт с числом очков
+// (50, 52, 55 … 38 310 на 322-м); набитый урон копится между боями, пока есть подписка на иглу ---
+const TALANT_MAKS = 1335;
+const ORUZHIE = [["knife", "Финка", 4], ["gunshot", "Самопал", 5], ["poison", "Яд", 18]];   // [код, имя, руб. за штуку]
+const KOD_RU = { poison: "яд", gunshot: "самопал", knife: "финка" };   // s["uron_udara"] у бота — с русскими ключами
+const ORUZHIE_ROD = { knife: "финок", gunshot: "самопала", poison: "яда" };
+// кривая порога: q(n) = 50 + 1,636·n + 0,364·n² — проходит через известные точки (50, 52, 55 на 0–2 очках, ≈38 310 на 322-м)
+const krivaya = n => 50 + 1.636 * n + 0.364 * n * n;
+
+// d.tl2: [потрачено очков, набито к следующему, нужно к следующему, предел очков]; без него — только d.tl (старый бот)
+function talantySost(d) {
+  const t = arr(d.tl2);
+  if (est(t[0]) && est(t[2]) && num(t[2]) > 0) {
+    const spent = Math.max(0, Math.floor(num(t[0])));
+    return { spent, cur: Math.max(0, num(t[1])), req: num(t[2]), max: num(t[3]) > spent ? Math.floor(num(t[3])) : Math.max(TALANT_MAKS, spent), staroe: false };
+  }
+  if (est(d.tl)) {
+    const spent = Math.max(0, Math.floor(num(d.tl)));
+    return { spent, cur: 0, req: 0, max: Math.max(TALANT_MAKS, spent), staroe: true };
+  }
+  return null;
+}
+function porogi(d) {                                       // d.tp: {"очков": порог} → [[очков, порог], …] по возрастанию
+  return Object.entries(obj(d.tp)).map(([n, r]) => [Number(n), num(r)])
+    .filter(([n, r]) => Number.isInteger(n) && n >= 0 && n < 1e4 && r > 0).sort((a, b) => a[0] - b[0]);
+}
+// порог очка n (урон, чтобы из n очков стало n+1): кривая, выровненная по нынешней точке — f(n) = q(n) · req / q(spent),
+// req — порог при нынешних очках (от бота, иначе из истории d.tp, иначе сама кривая). Пороги из истории d.tp — как есть.
+function porogFunkciya(d, ts) {
+  const znaem = new Map(porogi(d));
+  let req = ts.req, vyrovneno = req > 0;
+  if (!vyrovneno && znaem.has(ts.spent)) { req = znaem.get(ts.spent); vyrovneno = true; }
+  if (!vyrovneno) req = Math.round(krivaya(ts.spent));
+  req = Math.max(1, req);
+  const m = req / krivaya(ts.spent);
+  const f = n => (znaem.has(n) ? znaem.get(n) : n === ts.spent ? req : Math.max(1, Math.round(krivaya(n) * m)));
+  return { f, req, m, vyrovneno, tochek: znaem.size };
+}
+// урона до T очков всего: остаток к следующему очку + пороги очков spent+1 … T−1.
+// Точно — только следующее очко при известном пороге и набитом уроне; дальше — по кривой.
+function uronDoTalantov(ts, pf, T) {
+  T = Math.min(Math.max(Math.floor(T), ts.spent + 1), ts.max);
+  let s = Math.max(0, pf.req - ts.cur);
+  for (let n = ts.spent + 1; n < T; n++) s += pf.f(n);
+  return Math.round(s);
+}
+const tochnoDo = (ts, T) => !ts.staroe && Math.floor(T) <= ts.spent + 1;
+function dostupnoDo(ts, pf, uron) {                        // до скольких очков хватит этого урона
+  let T = ts.spent, s = 0;
+  while (T < ts.max) {
+    const c = T === ts.spent ? Math.max(0, pf.req - ts.cur) : pf.f(T);
+    if (s + c > uron) break;
+    s += c; T++;
+  }
+  return T;
+}
+// урон за удар без крита — только замер бота (d.ud, у яда — замер без промо, если бот его прислал);
+// нет замера — null: число не выдумываем, на странице «нет замера»
+function udarOruzhiya(d) {
+  const ud = obj(d.ud), out = {};
+  for (const [kod] of ORUZHIE) {
+    const n = num(ud[kod]) || num(ud[KOD_RU[kod]]);
+    out[kod] = n > 0 ? n : null;
+  }
+  return out;
+}
+function zapasOruzhiya(d) {                                // склад: d.oz, иначе оружие под комбо d.or [финки, самопал, яд]
+  const oz = obj(d.oz);
+  if (ORUZHIE.some(([k]) => est(oz[k]))) return Object.fromEntries(ORUZHIE.map(([k]) => [k, Math.max(0, num(oz[k]))]));
+  const or = arr(d.or);
+  if (or.length >= 3 && or.slice(0, 3).some(est)) return { knife: Math.max(0, num(or[0])), gunshot: Math.max(0, num(or[1])), poison: Math.max(0, num(or[2])) };
+  return null;
+}
+function raschetOruzhiya(d, uron) {
+  const ud = udarOruzhiya(d), zp = zapasOruzhiya(d);
+  return ORUZHIE.map(([kod, imya, cena]) => {
+    const u = ud[kod], zapas = zp ? zp[kod] : null;
+    if (!u) return { kod, imya, cena, udar: null, udarov: null, rub: null, zapas, dolya: null };
+    const udarov = uron > 0 ? Math.ceil(uron / u) : 0;
+    return { kod, imya, cena, udar: u, udarov, rub: udarov * cena, zapas, dolya: zp && uron > 0 ? Math.min(1, zapas * u / uron) : null };
+  });
+}
+const procent = x => (x >= 1 ? "100 %" : x >= 0.1 ? Math.round(x * 100) + " %" : (Math.round(x * 1000) / 10).toLocaleString("ru-RU") + " %");
+// строка про склад: время снимка, сколько урона в нём (только оружие с замером удара) и до скольких очков хватит
+function tekstSklada(d, ts, pf) {
+  const zp = zapasOruzhiya(d);
+  if (!zp) return "Склад оружия бот ещё не присылал.";
+  const ud = udarOruzhiya(d), kogda = str(obj(d.oz).kogda).slice(0, 20);
+  const s = kogda ? "Склад на " + kogda : "Склад";
+  const zamereny = ORUZHIE.filter(([k]) => ud[k]), bez = ORUZHIE.filter(([k]) => !ud[k]);
+  if (!zamereny.length) return s + ": финки " + chislo(zp.knife) + ", самопал " + chislo(zp.gunshot) + ", яд " + chislo(zp.poison) +
+    " — урон не посчитать: нет замера удара ни одним оружием.";
+  const ves = zamereny.reduce((x, [k]) => x + zp[k] * ud[k], 0), doo = dostupnoDo(ts, pf, ves);
+  return s + " — " + sokr(ves) + " урона" + (bez.length ? " без " + bez.map(([k]) => ORUZHIE_ROD[k]).join(" и ") + " (нет замера удара)" : "") +
+    ": " + (doo > ts.spent ? (doo > ts.spent + 1 ? "≈ " : "") + "хватит до " + chislo(doo) + " " + sklon(doo, ["очка", "очков", "очков"]) + "."
+      : "на следующее очко не хватит.");
+}
+function kalkulyatorTalantov(d) {
+  const ts = talantySost(d);
+  if (!ts) return list(podpis("Калькулятор появится после ближайшего прогона бота: он пришлёт очки и пороги талантов."));
+  const ochki = n => chislo(n) + " " + sklon(n, ["очко", "очка", "очков"]);
+  if (ts.spent >= ts.max) return list(ryad(el("span", "bolshoe zek cifra", ochki(ts.spent)), podpis("все таланты взяты")));
+  const pf = porogFunkciya(d, ts);
+  const s = list(
+    ryad(el("span", "bolshoe zek cifra", ochki(ts.spent)), podpis("предел " + chislo(ts.max), "cifra")),
+    polosa(ts.staroe ? 0 : ts.cur / pf.req, "tonk"),
+    ryad(ts.staroe ? podpis("сколько набито к следующему очку, бот ещё не присылал")   /* длинный текст — с переносом */
+      : podpis("к " + (ts.spent + 1) + "-му: " + chislo(Math.round(ts.cur)) + " / " + chislo(Math.round(pf.req)), "cifra")));
+  s.classList.add("kalk");
+  const min = ts.spent + 1, max = ts.max, nachalo = Math.min(max, ts.spent + 10);
+  const polzunok = el("input", "");
+  polzunok.type = "range"; polzunok.min = min; polzunok.max = max; polzunok.step = 1; polzunok.value = nachalo;
+  polzunok.setAttribute("aria-label", "цель — очков талантов всего");
+  const pole = el("input", "pole cifra");
+  pole.type = "number"; pole.inputMode = "numeric"; pole.min = min; pole.max = max; pole.step = 1; pole.value = nachalo;
+  pole.id = "kalkCel";
+  const metka = el("label", "podpis", "цель — очков всего");
+  metka.htmlFor = "kalkCel";
+  const itog = el("span", "bolshoe zek cifra"), itogPod = podpis("", "cifra");
+  const oruzhie = el("ul", "spisok");
+  const pereschitat = T => {
+    const uron = uronDoTalantov(ts, pf, T), plyus = T - ts.spent;
+    itog.textContent = (tochnoDo(ts, T) ? "" : "≈ ") + sokr(uron);
+    itogPod.textContent = "урона на +" + chislo(plyus) + " (до " + chislo(T) + ")";
+    oruzhie.replaceChildren(...raschetOruzhiya(d, uron).map(o => el("li", "",
+      el("div", "", el("b", "zek", o.imya),
+        el("div", "podpis cifra", o.udar ? chislo(o.udar) + " за удар" : "удара без крита ещё не было"),
+        o.zapas != null ? el("div", "podpis cifra", "склад " + chislo(o.zapas) + (o.dolya != null ? " — " + procent(o.dolya) : "")) : null),
+      o.udar ? el("div", "zn", el("div", "cifra", chislo(o.udarov) + " " + sklon(o.udarov, ["удар", "удара", "ударов"])),
+        el("div", "podpis cifra", chislo(o.rub) + " руб."))
+        : el("div", "zn", el("div", "podpis", "нет замера")))));
+  };
+  polzunok.addEventListener("input", () => { pole.value = polzunok.value; pereschitat(Number(polzunok.value)); });
+  pole.addEventListener("input", () => {
+    const T = Math.round(num(pole.value));
+    if (T >= min && T <= max) { polzunok.value = T; pereschitat(T); }
+  });
+  pole.addEventListener("change", () => {
+    const T = Math.min(max, Math.max(min, Math.round(num(pole.value)) || min));
+    pole.value = T; polzunok.value = T; pereschitat(T);
+  });
+  pereschitat(nachalo);
+  const tochnost = "Оценка приблизительная, и чем дальше цель, тем грубее: пороги следующих очков — по кривой роста " +
+    "(50, 52, 55 … 38 310 на 322-м)" + (ts.staroe ? (pf.vyrovneno ? ", выровненной по порогу из истории" : "") +
+      "; бот ещё не присылал, сколько набито к следующему очку." : ", выровненной по нынешнему порогу.") +
+    (pf.tochek ? " Пороги, которые бот уже видел, взяты как есть." : "");
+  s.append(el("div", "kalk-cel", metka, pole), polzunok, ryad(itog, itogPod), oruzhie, el("p", "podpis", tekstSklada(d, ts, pf)),
+    el("p", "podpis zametka-list", tochnost + " Урон копится между боями, пока есть подписка на иглу."));
+  return s;
+}
+
 function progress(d, v) {
   v.append(zag("Уровень"), kartaUrovnya(d));
+  bezopasnoChast(v, () => v.append(zag("Калькулятор талантов"), kalkulyatorTalantov(d)));
   v.append(zag("Цель стратегии"), celStrategii(d));
   const ds = arr(d.ds);
   if (ds.length) v.append(zag("Достижения"), list(
@@ -973,6 +1434,12 @@ function bezopasno(id, fn) {
   try { fn(v); } catch (e) {
     try { console.error(e); } catch (e2) {}
     v.append(list(podpis("Этот раздел не показался: в данных что-то не так. Остальные вкладки работают.")));
+  }
+}
+function bezopasnoChast(v, fn) {                           // то же для блока внутри вкладки
+  try { fn(); } catch (e) {
+    try { console.error(e); } catch (e2) {}
+    v.append(list(podpis("Этот блок не показался: в данных что-то не так.")));
   }
 }
 
