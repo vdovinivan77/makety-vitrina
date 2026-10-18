@@ -941,14 +941,38 @@ function podtverdit(t, fn) {
   try { if (tg && tg.showConfirm && verOk("6.2")) { tg.showConfirm(t.slice(0, 250), ok => { if (ok) fn(); }); return; } } catch (e) {}
   if (confirm(t)) fn();
 }
+// 18.10 владелец: «пытался поставить очередь — бот продолжал ставить своих»: пульт был открыт кнопкой меню, sendData
+// оттуда не работает, а подсказку легко пропустить. Запасной путь: тот же JSON боту обычным сообщением (бот его
+// принимает так же, как sendData) — копируем в буфер и показываем, куда вставить; не скопировалось — поле с текстом.
+function zapasCherezChat(json) {
+  const ok = () => soobshchit("Пульт открыт кнопкой меню — отсюда бот очередь не получит. Команда скопирована: " +
+    "закрой пульт, вставь её в чат бота и отправь. (Или открой пульт кнопкой «📊 Тюряга» под полем ввода.)");
+  const pole = () => {
+    let b = document.getElementById("ochKomanda");
+    if (!b) {
+      b = el("div", "och-pred"); b.id = "ochKomanda";
+      const v = document.querySelector(".och-pred");
+      (v && v.parentNode ? v.parentNode : document.body).prepend(b);
+    }
+    b.replaceChildren(el("p", "zametka", "Скопируй эту команду и отправь боту сообщением:"));
+    const ta = document.createElement("textarea");
+    ta.value = json; ta.readOnly = true; ta.rows = 4; ta.style.width = "100%"; ta.style.fontSize = "16px";
+    b.append(ta); ta.focus(); ta.select();
+    b.scrollIntoView({block: "center"});
+  };
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(json).then(ok, pole); return; }
+  } catch (e) {}
+  pole();
+}
 function otpravitBotu(kom) {
-  const pr = prichinaBezSendData();
-  if (pr) { soobshchit(pr); return; }
   const json = JSON.stringify(kom);
   if (new TextEncoder().encode(json).length > SENDDATA_MAKS) { soobshchit("Очередь не влезает в одну команду Telegram — убери часть строк."); return; }
+  const pr = prichinaBezSendData();
+  if (pr) { if (tg && tg.platform && tg.platform !== "unknown") zapasCherezChat(json); else soobshchit(pr); return; }
   tuk();
-  try { tg.sendData(json); } catch (e) { soobshchit(SENDDATA_PODSKAZKA); return; }
-  setTimeout(() => soobshchit(SENDDATA_PODSKAZKA), 1500);   // окно не закрылось — значит, sendData здесь не работает
+  try { tg.sendData(json); } catch (e) { zapasCherezChat(json); return; }
+  setTimeout(() => zapasCherezChat(json), 1500);            // окно не закрылось — значит, sendData здесь не работает
 }
 
 function ocheredBlok(d, v) {
