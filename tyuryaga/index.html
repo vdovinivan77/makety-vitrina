@@ -238,6 +238,33 @@ details.cep>summary::-webkit-details-marker{display:none}
 .och-kn button:disabled{opacity:.3;cursor:default;box-shadow:none}
 .och-kn button:not(:disabled):active,.och-forma button:active{transform:translateY(1px);box-shadow:0 1px 0 #1b130d}
 .och-pol{display:flex;gap:6px;margin:6px 0 4px}
+/* окно «Выбрать боссов» (пункт 2, 18.10): во весь экран поверх вкладок, список листается внутри */
+.vb-fon{position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;gap:8px;
+  padding:12px 12px calc(10px + var(--niz));background:var(--noch)}
+.vb-verh{display:flex;align-items:center;gap:8px}
+.vb-verh h2{flex:1;min-width:0;font-size:22px;line-height:1.1;color:var(--krem);text-shadow:0 2px 0 #1b130d}
+.vb-fon .pole{background:rgba(255,250,238,.92)}
+.vb-kat{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;flex:none}
+.vb-kat::-webkit-scrollbar{display:none}
+.vb-kat button,.vb-verh button,.vb-niz button{flex:none;height:34px;padding:0 12px;border:1.5px solid #120c08;border-radius:5px;cursor:pointer;
+  font:13px/1 "PrisonFont",Impact,"Arial Black",sans-serif;letter-spacing:.02em;text-transform:uppercase;color:#c6b08f;
+  background:linear-gradient(#33251b,#251a12);box-shadow:0 2px 0 #0b0705}
+.vb-kat button[aria-pressed="true"],.vb-niz button.da{color:#1b130d;border-color:#1b130d;
+  background:linear-gradient(#ffe45a,var(--zhelt) 55%,#d9b40e);box-shadow:0 2px 0 #1b130d}
+.vb-niz button:disabled{opacity:.45;cursor:default}
+.vb-verh button{font:18px/1 system-ui,-apple-system,sans-serif;padding:0 10px}
+.vb-telo{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;
+  padding:10px 12px;border-radius:6px;color:var(--chernila);background:linear-gradient(#f3e8d0,#e6d6b6);
+  box-shadow:inset 0 0 0 1px rgba(60,45,30,.35),0 4px 12px rgba(0,0,0,.5)}
+.vb-niz{display:flex;flex-wrap:wrap;align-items:center;gap:6px;flex:none}
+.vb-niz .pole{flex:1;min-width:120px}
+.vb-niz .zametka{flex-basis:100%;padding:0 2px}
+.bk.vb{cursor:pointer;border-radius:4px}
+.bk.vb.vybran{background:linear-gradient(90deg,rgba(63,143,58,.3),rgba(63,143,58,0) 85%)}
+.vb-galka{flex:none;display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;
+  border:2px solid #1b130d;border-radius:4px;font:17px/1 system-ui,-apple-system,sans-serif;color:#fff;background:rgba(255,250,238,.8)}
+.vybran .vb-galka{background:var(--zelen)}
+.bk .podpis.ok,.bk .podpis.sobran{color:#2f6b1f}
 .och-pol .pole:first-child{flex:1}
 .och-raz{width:64px;flex:none}
 .och .podpis+.podpis{margin-top:2px}
@@ -771,7 +798,7 @@ const setyEst = d => Object.keys(obj(d.st)).length > 0;   // старый бот
 // сеты босса в режиме (d.st: {id: {буква: [[вид, есть, всего, имя], …]}}) — мусор из подделки отсеиваем
 function setyBossa(d, id, m) {
   return arr(obj(obj(d.st)[id])[m]).map(arr).filter(x => str(x[0]) && est(x[1]) && est(x[2]))
-    .map(x => ({ vid: str(x[0]), est: num(x[1]), vsego: num(x[2]), imya: str(x[3]).slice(0, 20) }));
+    .map(x => ({ vid: str(x[0]), est: num(x[1]), vsego: num(x[2]), imya: str(x[3]).slice(0, 20), bonus: str(x[4]).slice(0, 40) }));
 }
 // «одежда — авто» → буква младшего режима с недобранной одеждой; null — одежда собрана везде; undefined — сетов в данных нет
 function odezhdaRezhim(d, id) {
@@ -846,7 +873,7 @@ function opisanieStroki(d, id, rezh, r) {
     const sety = setyBossa(d, id, r.m);
     if (!sety.length) out.push(el("div", "podpis", "сетов в этом режиме нет"));
     sety.forEach(x => out.push(el("div", "podpis", (VID_SETA[x.vid] || "прочее") + " «" + x.imya + "» — " +
-      (x.vsego && x.est >= x.vsego ? "собран ✓" : x.est + " из " + x.vsego))));
+      (x.vsego && x.est >= x.vsego ? "собран ✓" : x.est + " из " + x.vsego) + (x.bonus ? " — " + x.bonus : ""))));
   }
   return out;
 }
@@ -975,6 +1002,110 @@ function otpravitBotu(kom) {
   setTimeout(() => zapasCherezChat(json), 1500);            // окно не закрылось — значит, sendData здесь не работает
 }
 
+// --- окно «Выбрать боссов» (пункт 2, 18.10, по чужим ботам): поиск, цепочки, отметить нескольких; у каждого — вход
+// (от кого ключи, сколько нужно и есть), бои дня и сеты по режимам с бонусом собранного. Добавляет строки в OCHERED
+// страницы — боту они уходят той же кнопкой «Поставить очередь». ---
+const REZH_KR = { p: "пац.", b: "блат.", a: "авт.", v: "вор." };
+function kartaVybora(d, b, vybor, schet) {
+  const st = status(b, d), bk = obj(d.bk), lim = num(bk.lim) || 7, dw = num(obj(bk.dw)[b.id]), znaem = bkEst(d);
+  const limit = znaem && dw >= lim, info = [];
+  if (b.src) {
+    const est_ = num(obj(bk.keys)[b.src]);
+    info.push(el("div", "podpis" + (znaem ? (est_ >= b.nado ? " ok" : " limit") : ""),
+      "вход: " + b.nado + " кл. " + (ROD[b.src] || "№" + b.src) + (znaem ? " — есть " + est_ : "")));
+  } else info.push(el("div", "podpis", "вход свободный"));
+  if (st.c === "zakryt") info.push(el("div", "podpis limit", st.t));
+  if (st.c === "boy") info.push(el("div", "podpis", "сейчас в бою"));
+  if (znaem) info.push(el("div", "podpis" + (limit ? " limit" : ""), "бои сегодня " + dw + "/" + lim));
+  if (setyEst(d)) rezhimyBossa(b.id).forEach(m => setyBossa(d, b.id, m).forEach(x => {
+    const sobran = x.vsego && x.est >= x.vsego;
+    info.push(el("div", "podpis" + (sobran ? " sobran" : ""), REZH_KR[m] + " " + (VID_SETA[x.vid] || "прочее") + " «" + x.imya +
+      "» " + x.est + "/" + x.vsego + (sobran ? " ✓" : "") + (x.bonus ? " — " + x.bonus : "")));
+  }));
+  const galka = el("span", "vb-galka", vybor.has(b.id) ? "✓" : "");
+  const li = el("li", "bk vb" + (vybor.has(b.id) ? " vybran" : "") + (st.zakryt || limit ? " zakryt" : ""),
+    lineyka(b.id, b.kat, "mal"),
+    el("div", "", el("div", "och-ver", el("b", "zek imya", b.imya), galka),
+      el("div", "podpis", nbsp(sokr(b.hp)) + " здоровья · " + nagrada(b)), ...info));
+  li.setAttribute("role", "checkbox");
+  li.tabIndex = 0;
+  const pokazat_ = () => {
+    const da = vybor.has(b.id);
+    li.classList.toggle("vybran", da); galka.textContent = da ? "✓" : ""; li.setAttribute("aria-checked", da ? "true" : "false");
+  };
+  pokazat_();
+  li.onclick = () => { tuk("v"); vybor.has(b.id) ? vybor.delete(b.id) : vybor.add(b.id); pokazat_(); schet(); };
+  li.onkeydown = e => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); li.onclick(); } };
+  return li;
+}
+function oknoVybora(d, pereris) {
+  const vybor = new Set();
+  let kat = 0, poisk = "";
+  const fon = el("div", "vb-fon");
+  fon.setAttribute("role", "dialog"); fon.setAttribute("aria-modal", "true"); fon.setAttribute("aria-label", "Выбрать боссов");
+  const zakrytK = el("button", "", "✕");
+  zakrytK.type = "button"; zakrytK.setAttribute("aria-label", "закрыть");
+  const pole = el("input", "pole");
+  pole.type = "search"; pole.placeholder = "Поиск по имени"; pole.setAttribute("aria-label", "поиск босса");
+  const kats = el("div", "vb-kat");
+  const spisok = el("ul", "bk-spisok");
+  const rezhV = el("select", "pole");
+  rezhV.setAttribute("aria-label", "режим для выбранных");
+  ["odezhda", "pacansky", "blotnoy", "avtoritetny", "vorovskoy"].forEach(k => rezhV.append(opciya(k, rezhimRu(k), k === "odezhda")));
+  const razV = vyborRaz(1);
+  const dobavit = el("button", "da", "Добавить");
+  dobavit.type = "button";
+  const schet = () => { dobavit.textContent = vybor.size ? "Добавить (" + vybor.size + ")" : "Добавить"; dobavit.disabled = !vybor.size; };
+  const risuy = () => {
+    const q = poisk.trim().toLowerCase().replace(/ё/g, "е");
+    const bossy = [1, 2, 3].filter(k => !kat || k === kat).flatMap(k => poryadok(k))
+      .filter(b => !q || b.imya.toLowerCase().replace(/ё/g, "е").includes(q));
+    spisok.replaceChildren(...(bossy.length ? bossy.map(b => kartaVybora(d, b, vybor, schet)) : [el("li", "podpis", "Никого не нашёл.")]));
+    schet();
+  };
+  [[0, "Все"], [1, "Цепочка 1"], [2, "Цепочка 2"], [3, "Цепочка 3"]].forEach(([k, t]) => {
+    const kn = el("button", "", t);
+    kn.type = "button"; kn.setAttribute("aria-pressed", k === kat ? "true" : "false");
+    kn.onclick = () => { tuk("v"); kat = k; kats.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === kn ? "true" : "false")); risuy(); };
+    kats.append(kn);
+  });
+  pole.oninput = () => { poisk = pole.value; risuy(); };
+  const bylo = document.body.style.overflow;
+  const zakryt = () => {
+    fon.remove(); document.body.style.overflow = bylo; document.removeEventListener("keydown", esc_);
+    try { if (tg && tg.BackButton && verOk("6.1")) { tg.BackButton.offClick(zakryt); tg.BackButton.hide(); } } catch (e) {}
+  };
+  const esc_ = e => { if (e.key === "Escape") zakryt(); };
+  zakrytK.onclick = zakryt;
+  dobavit.onclick = () => {
+    if (!vybor.size) return;
+    const mesta = OCH_MAKS - OCHERED.length;
+    if (mesta <= 0) { soobshchit("В очереди уже " + OCH_MAKS + " строк — больше бот не примет."); return; }
+    const ids = [1, 2, 3].flatMap(k => poryadok(k)).map(b => b.id).filter(id => vybor.has(id));   // порядок цепочек
+    const vzyat = ids.slice(0, mesta);
+    tuk();
+    vzyat.forEach(id => OCHERED.push({ id, rezh: rezhimDlyaBossa(id, rezhV.value), raz: skolkoRaz(razV.value), sila: 1,
+      usl: usloviya({}), uslSyroe: {}, chtenie: false }));
+    zakryt();
+    pereris();
+    soobshchit("Добавил в очередь страницы: " + vzyat.map(imyaBossa).join(", ") +
+      (vzyat.length < ids.length ? ". Не влезли (больше " + OCH_MAKS + " строк): " + ids.slice(mesta).map(imyaBossa).join(", ") : "") +
+      ". Проверь порядок и нажми «Поставить очередь».");
+  };
+  fon.append(
+    el("div", "vb-verh", el("h2", "zek", "Добавить в очередь"), zakrytK),
+    pole, kats,
+    el("div", "vb-telo", spisok),
+    el("div", "vb-niz", rezhV, razV, dobavit,
+      el("p", "zametka", "Режим и «×» — для всех отмеченных; «одежда — авто» бот сам возьмёт младший режим с недобранной " +
+        "одеждой. Боссу без выбранного режима — пацанский.")));
+  document.body.append(fon);
+  document.body.style.overflow = "hidden";
+  document.addEventListener("keydown", esc_);
+  try { if (tg && tg.BackButton && verOk("6.1")) { tg.BackButton.onClick(zakryt); tg.BackButton.show(); } } catch (e) {}
+  risuy();
+}
+
 function ocheredBlok(d, v) {
   OCHERED = ocheredIzDannyh(d);
   v.append(zag("Очередь на сегодня"));
@@ -1008,7 +1139,11 @@ function ocheredBlok(d, v) {
     pereris();
   };
   pereris();
-  v.append(spisok, list(el("b", "zek grafik-zag", "Добавить бой"), el("div", "och-forma", bossV, rezhV, razV, dobavit), pred));
+  const vybrat = el("button", "glavnaya", "➕ Выбрать боссов");
+  vybrat.type = "button";
+  vybrat.onclick = () => { tuk(); oknoVybora(d, pereris); };
+  v.append(spisok, el("section", "pult", vybrat),
+    list(el("b", "zek grafik-zag", "Добавить бой"), el("div", "och-forma", bossV, rezhV, razV, dobavit), pred));
 
   const postavit = el("button", "", "Поставить очередь"), ochistit = el("button", "", "Очистить");
   postavit.type = ochistit.type = "button";
