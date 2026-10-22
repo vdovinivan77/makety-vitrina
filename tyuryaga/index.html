@@ -1295,8 +1295,9 @@ const TALANT_MAKS = 1335;
 const ORUZHIE = [["knife", "Финка", 4], ["gunshot", "Самопал", 5], ["poison", "Яд", 18]];   // [код, имя, руб. за штуку]
 const KOD_RU = { poison: "яд", gunshot: "самопал", knife: "финка" };   // s["uron_udara"] у бота — с русскими ключами
 const ORUZHIE_ROD = { knife: "финок", gunshot: "самопала", poison: "яда" };
-// кривая порога: q(n) = 50 + 1,636·n + 0,364·n² — проходит через известные точки (50, 52, 55 на 0–2 очках, ≈38 310 на 322-м)
-const krivaya = n => 50 + 1.636 * n + 0.364 * n * n;
+// порог очка = предыдущий × 1,007 (сверено 22.10 на 29 порогах 326–403 из игры, точно до 1; прежняя парабола завышала)
+const TALANT_ROST = 1.007;
+const krivaya = n => 50 * Math.pow(TALANT_ROST, n);
 
 // d.tl2: [потрачено очков, набито к следующему, нужно к следующему, предел очков]; без него — только d.tl (старый бот)
 function talantySost(d) {
@@ -1315,7 +1316,7 @@ function porogi(d) {                                       // d.tp: {"очков
   return Object.entries(obj(d.tp)).map(([n, r]) => [Number(n), num(r)])
     .filter(([n, r]) => Number.isInteger(n) && n >= 0 && n < 1e4 && r > 0).sort((a, b) => a[0] - b[0]);
 }
-// порог очка n (урон, чтобы из n очков стало n+1): кривая, выровненная по нынешней точке — f(n) = q(n) · req / q(spent),
+// порог очка n (урон, чтобы из n очков стало n+1): f(n) = req · 1,007^(n − spent),
 // req — порог при нынешних очках (от бота, иначе из истории d.tp, иначе сама кривая). Пороги из истории d.tp — как есть.
 function porogFunkciya(d, ts) {
   const znaem = new Map(porogi(d));
