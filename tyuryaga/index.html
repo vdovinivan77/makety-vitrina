@@ -1154,7 +1154,8 @@ function bystroBlok(d, v) {
   kn.push(sejchas);
   if (str(d.bpd)) kn.push(knBystro("✋ Подбор вкл", "bp_0"));
   else kn.push(knBystro("✋ Без подбора 1 ч", "bp_1"), knBystro("✋ 2 ч", "bp_2"));
-  if (celoe(d.sb)) kn.push(knBystro("🏳 Сдать " + imyaBossa(celoe(d.sb)) + " (2 мыла)", "sdat_" + celoe(d.sb)));
+  if (celoe(d.sb) && /^[0-9a-f]{6}$/.test(str(d.sbh)))      // метка запуска: тот же босс, новый бой — бот не сдаст
+    kn.push(knBystro("🏳 Сдать " + imyaBossa(celoe(d.sb)) + " (2 мыла)", "sdat_" + celoe(d.sb) + "_" + str(d.sbh)));
   bd.filter(x => !ns.includes(celoe(x[0]))).forEach(x => kn.push(knBystro("🚫 " + imyaBossa(celoe(x[0])), "ns_" + celoe(x[0]))));
   ns.forEach(id => kn.push(knBystro("✅ " + imyaBossa(id), "nsx_" + id)));
   v.append(el("section", "pult", ...kn));
