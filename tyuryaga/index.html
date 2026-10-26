@@ -1106,8 +1106,70 @@ function oknoVybora(d, pereris) {
   risuy();
 }
 
+// --- 26.10 быстрые правки (владелец: «быстренько поменять очередь… отстранить ботовских и поставить своих»): ⚡ Сейчас,
+// ✋ без подбора, 🚫 не ставь сегодня, ✖/⬆ строки, 🏳 сдать бой. Уходят ссылкой /start <код> (работает и из кнопки
+// меню, где sendData нет); бот в чате переспросит «да?» с подробностями. ---
+const GIGANTY_PULTA = [17, 18, 30, 31, 37, 39, 42, 44, 45, 53, 54, 55];
+const KOD_REZH = { p: "пац.", b: "блат.", a: "авт.", v: "вор." };
+function bystro(kod) { komanda("/start " + kod, kod); }
+function knBystro(t, kod, cls) {
+  const k = el("button", cls || "", t);
+  k.type = "button";
+  k.onclick = () => { tuk(); bystro(kod); };
+  return k;
+}
+function oknoSejchas(d) {                                 // выбор босса и режима для «⚡ Сейчас»
+  const lr = obj(d.lr), dw = obj(obj(d.bk).dw), lim = num(obj(d.bk).lim) || 7;
+  const fon = el("div", "vb-fon");
+  fon.setAttribute("role", "dialog"); fon.setAttribute("aria-modal", "true"); fon.setAttribute("aria-label", "Сейчас");
+  const zakrytK = el("button", "", "✕");
+  zakrytK.type = "button"; zakrytK.setAttribute("aria-label", "закрыть");
+  zakrytK.onclick = () => fon.remove();
+  const telo = el("div", "vb-telo");
+  telo.append(el("p", "podpis", "★ — режим, где с босса ещё падает. Бой встанет первым, раньше комбо; бот переспросит «да?» в чате."));
+  const ids = Object.keys(lr).length ? Object.keys(lr).map(Number) : GIGANTY_PULTA;
+  ids.filter(id => num(dw[id]) < lim).sort((a, b) => (BOSS[a] ? BOSS[a].hp : 0) - (BOSS[b] ? BOSS[b].hp : 0)).forEach(id => {
+    const lut = arr(lr[id]).map(str);
+    const rezh = rezhimyBossa(id).filter(m => KOD_REZH[m]);
+    telo.append(el("div", "och-ver", el("b", "zek imya", imyaBossa(id) + " " + num(dw[id]) + "/" + lim),
+      el("span", "och-kn", ...rezh.map(m => knBystro((lut.includes(m) ? "★" : "") + KOD_REZH[m], "sej_" + id + "_" + m)))));
+  });
+  fon.append(el("div", "vb-verh", el("h2", "zek", "⚡ Сейчас"), zakrytK), telo);
+  document.body.append(fon);
+}
+function bystroBlok(d, v) {
+  const st = [];
+  const sj = arr(d.sj);
+  if (sj.length) st.push("⚡ Сейчас: " + imyaBossa(celoe(sj[0])) + " (" + (KOD_REZH[str(sj[1])] || "") + ") — встанет, как только освободится слот");
+  if (str(d.bpd)) st.push("✋ Без подбора до " + str(d.bpd) + ": гигантов и бои на друзей бот сам не ставит");
+  const ns = arr(d.ns).map(celoe).filter(Boolean);
+  if (ns.length) st.push("🚫 Сегодня сам не ставлю: " + ns.map(imyaBossa).join(", "));
+  const bd = arr(d.bd).map(arr).filter(x => celoe(x[0]));
+  st.push(bd.length ? "🤖 Бот ставит сам (подбор в " + str(d.bdt) + "): " + bd.map(x => imyaBossa(celoe(x[0])) + " (" +
+    (KOD_REZH[str(x[1])] || "") + ") ≈" + num(x[2]) + " ч").join("; ") : "🤖 Бот сегодня ещё сам не подбирал");
+  v.append(zag("Быстро"), list(...st.map(t => el("div", "podpis", t))));
+  const kn = [];
+  const sejchas = el("button", "glavnaya", "⚡ Сейчас…");
+  sejchas.type = "button"; sejchas.onclick = () => { tuk(); oknoSejchas(d); };
+  kn.push(sejchas);
+  if (str(d.bpd)) kn.push(knBystro("✋ Подбор вкл", "bp_0"));
+  else kn.push(knBystro("✋ Без подбора 1 ч", "bp_1"), knBystro("✋ 2 ч", "bp_2"));
+  if (celoe(d.sb)) kn.push(knBystro("🏳 Сдать " + imyaBossa(celoe(d.sb)) + " (2 мыла)", "sdat_" + celoe(d.sb)));
+  bd.filter(x => !ns.includes(celoe(x[0]))).forEach(x => kn.push(knBystro("🚫 " + imyaBossa(celoe(x[0])), "ns_" + celoe(x[0]))));
+  ns.forEach(id => kn.push(knBystro("✅ " + imyaBossa(id), "nsx_" + id)));
+  v.append(el("section", "pult", ...kn));
+  const qv = versiyaOcheredi(d), q = ocheredIzDannyh(d);
+  if (qv !== null && q.length) {                          // строки, как они у бота сейчас: убрать / поставить первой сразу
+    const li = q.map((x, i) => el("div", "och-ver", el("span", "mesto cifra", (i + 1) + "."),
+      el("b", "zek imya", imyaBossa(x.id) + " (" + rezhimRu(x.rezh) + ")" + (x.raz > 1 ? " ×" + x.raz : "")),
+      el("span", "och-kn", ...(i ? [knBystro("⬆", "qu_" + (i + 1) + "_" + qv)] : []), knBystro("✖", "qx_" + (i + 1) + "_" + qv))));
+    v.append(list(el("b", "zek grafik-zag", "Сразу: строки очереди у бота"), ...li));
+  }
+}
+
 function ocheredBlok(d, v) {
   OCHERED = ocheredIzDannyh(d);
+  bezopasnoChast(v, () => bystroBlok(d, v));
   v.append(zag("Очередь на сегодня"));
   const spisok = el("div", "");
   const bossV = vyborBossa(d), rezhV = vyborRezhima(0, "pacansky"), razV = vyborRaz(1), pred = el("div", "och-pred");
