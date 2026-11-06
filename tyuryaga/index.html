@@ -195,6 +195,12 @@ details.cep>summary::-webkit-details-marker{display:none}
   height:48px;border:2px solid #1b130d;border-radius:5px;cursor:pointer;color:#1b130d;
   background:linear-gradient(#ffe45a,var(--zhelt) 55%,#d9b40e);box-shadow:0 3px 0 #1b130d}
 .pult button.glavnaya{grid-column:1/-1}
+.lg-dni{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:6px 0 10px}
+.lg-dni button{font-size:13px;padding:7px 2px;border-radius:8px;border:1px solid #6b5640;background:#efe3cc;color:#1b130d}
+.lg-dni button[aria-pressed="true"]{background:#1b130d;color:#f2d21c}
+.lg-pole{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px}
+.lg-pole label{display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--karandash);min-width:0}
+.lg-pole input,.lg-pole select{font-size:16px;padding:7px 6px;border-radius:8px;border:1px solid #6b5640;background:#fffaf0;color:#1b130d;width:100%;min-width:0}
 .vkladki,.pult{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}   /* без синих маркеров и «Сохранить изображение» */
 .vkladki img{-webkit-user-drag:none}
 .pult button:active{transform:translateY(2px);box-shadow:0 1px 0 #1b130d}
@@ -308,6 +314,8 @@ details.cep>summary::-webkit-details-marker{display:none}
       <button id="knPauza" type="button">Пауза</button>
     </section>
     <p class="zametka" id="pultZametka">Бот ответит в чате, обычно за 5 минут, иногда до 10. Дождись ответа «⏸ на паузе» — потом играй сам.</p>
+
+    <div id="lagerBlok"></div>
 
     <h2 class="zag zek">Как часто работает бот</h2>
     <section class="list"><ul class="spisok spravka">
@@ -1680,6 +1688,7 @@ let D = null;
     bezopasno("v-obshchak", v => obshchak(D, v));
     bezopasno("v-progress", v => progress(D, v));
     bezopasno("v-zhurnal", v => zhurnal(D, v));
+    try { const v = document.getElementById("lagerBlok"); bezopasnoChast(v, () => lagerBlok(D, v)); } catch (e) {}
   } else {
     OSHIBKA = r.oshibka || "bitye";
     document.getElementById("oshibka").textContent = OSHIBKI[OSHIBKA] || OSHIBKI.bitye;
@@ -1688,6 +1697,58 @@ let D = null;
   try { s = sessionStorage.getItem(PAMYAT) || s; } catch (e) {}
   pokazat(s, true);
 })();
+
+// --- 06.11 «Лагерь» (владелец: «чтобы я сам мог, например, на следующий день поставить время… и урон»): день, урон,
+// начало и конец — одной командой /start lg_k_<тыс.>_<ЧЧММ>_<ЧЧММ>_<ГГГГММДД>; бот переспросит «да?» в чате ---
+let LG_DEN = 0;
+function lagerBlok(d, v) {
+  v.textContent = "";
+  const lg = obj(d.lg), dni = arr(lg.d).map(arr).filter(x => /^\d{4}-\d{2}-\d{2}$/.test(str(x[0])));
+  v.append(zag("Лагерь"));
+  if (!dni.length) { v.append(list(podpis("Бот ещё не прислал настройки лагеря — открой пульт после следующего отчёта."))); return; }
+  if (LG_DEN >= dni.length) LG_DEN = 0;
+  const [den, ot, doo, uron, izm] = dni[LG_DEN];
+  const h = obj(lg.h);
+  const knDni = el("div", "lg-dni");
+  dni.forEach((x, i) => {
+    const k = el("button", "", (i === 0 ? "Сегодня" : i === 1 ? "Завтра" : "Послезавтра") + " " + str(x[0]).slice(8) + "." + str(x[0]).slice(5, 7));
+    k.type = "button"; k.setAttribute("aria-pressed", i === LG_DEN ? "true" : "false");
+    k.onclick = () => { tuk("v"); LG_DEN = i; lagerBlok(d, v); };
+    knDni.append(k);
+  });
+  const st = [el("div", "podpis", "Сейчас стоит: урон " + sokr(num(uron)) + ", с " + str(ot) + " слот свободен и бот смотрит карту, до " +
+                str(doo) + " ждёт захват" + (num(izm) ? " (изменено тобой)" : "") + ".")];
+  if (LG_DEN === 0 && (num(h.b) || str(h.vi))) st.push(el("div", "podpis", (num(h.g) ? "✅ Сегодня закончили: " : "⚔️ Сегодня нанесено: ") +
+    sokr(num(h.u)) + ", боёв " + num(h.b) + "."));
+  st.push(el("div", "podpis", "На все дни: " + sokr(num(lg.v)) + ". Время и урон здесь — только на выбранный день."));
+  const pole = el("div", "lg-pole");
+  const sel = el("select", "");
+  for (let m = 0; m <= 10; m += 0.5) {
+    const o = el("option", "", m ? String(m).replace(".", ",") + " млн" : "не ходить");
+    o.value = String(m * 1000); if (Math.round(num(uron) / 1e5) === Math.round(m * 10)) o.selected = true;
+    sel.append(o);
+  }
+  const vrem = zn => { const i = el("input", ""); i.type = "time"; i.value = str(zn); i.step = 60; return i; };
+  const iOt = vrem(ot), iDo = vrem(doo);
+  const lb = (t, x) => { const l = el("label", "", t); l.append(x); return l; };
+  pole.append(lb("Урон", sel), lb("Начало", iOt), lb("Конец", iDo));
+  const kn = [];
+  const postavit = el("button", "glavnaya", "Поставить на " + str(den).slice(8) + "." + str(den).slice(5, 7));
+  postavit.type = "button";
+  postavit.onclick = () => {
+    tuk();
+    const a = iOt.value, b = iDo.value;
+    if (!/^\d{2}:\d{2}$/.test(a) || !/^\d{2}:\d{2}$/.test(b) || a >= b) {
+      if (tg && tg.showAlert) tg.showAlert("Начало должно быть раньше конца, в пределах одного дня."); else alert("Начало должно быть раньше конца.");
+      return;
+    }
+    bystro("lg_k_" + sel.value + "_" + a.replace(":", "") + "_" + b.replace(":", "") + "_" + str(den).replace(/-/g, ""));
+  };
+  kn.push(postavit);
+  if (num(izm)) kn.push(knBystro("↩️ Этот день как обычно", "lg_x_" + str(den).replace(/-/g, "")));
+  v.append(list(knDni, ...st, pole), el("section", "pult", ...kn));
+  v.append(el("p", "zametka", "Откроется чат с ботом — подтверди «да». Изменение увидишь здесь после следующего отчёта бота."));
+}
 
 // Пульт. Открыт кнопкой клавиатуры чата (у неё нет query_id) — sendData: команда уходит боту, окно закрывается.
 // Открыт кнопкой меню или sendData не сработал за 1,5 с — ссылка на бота с командой (/start pauza2).
