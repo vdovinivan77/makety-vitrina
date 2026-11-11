@@ -1747,6 +1747,25 @@ function lagerBlok(d, v) {
   kn.push(postavit);
   if (num(izm)) kn.push(knBystro("↩️ Этот день как обычно", "lg_x_" + str(den).replace(/-/g, "")));
   v.append(list(knDni, ...st, pole), el("section", "pult", ...kn));
+  // 11.11: чем и по сколько бить здания — на все дни
+  const NABORY = [["kp", "Финки → яд"], ["pk", "Яд → финки"], ["k", "Только финки"], ["p", "Только яд"],
+                  ["gkp", "Самопалы → финки → яд"], ["kgp", "Финки → самопалы → яд"]];
+  const RU = { k: "финки", p: "яд", g: "самопалы" };
+  const tekO = /^[kpg]{1,3}$/.test(str(lg.o)) ? str(lg.o) : "kp", tekP = [1, 10, 100].includes(num(lg.p)) ? num(lg.p) : 100;
+  const selO = el("select", ""), selP = el("select", "");
+  const nab = NABORY.some(x => x[0] === tekO) ? NABORY : NABORY.concat([[tekO, tekO.split("").map(b => RU[b]).join(" → ")]]);
+  nab.forEach(([kod, nazv]) => { const o = el("option", "", nazv); o.value = kod; if (kod === tekO) o.selected = true; selO.append(o); });
+  [1, 10, 100].forEach(x => { const o = el("option", "", "по " + x); o.value = String(x); if (x === tekP) o.selected = true; selP.append(o); });
+  const poleO = el("div", "lg-pole");
+  poleO.append(lb("Оружие", selO), lb("За удар", selP));
+  const knO = el("button", "glavnaya", "Поставить оружие");
+  knO.type = "button";
+  knO.onclick = () => { tuk(); bystro("lg_w_" + selO.value); };
+  const knP = el("button", "", "Поставить пачку");
+  knP.type = "button";
+  knP.onclick = () => { tuk(); bystro("lg_p_" + selP.value); };
+  v.append(zag("Чем бить"), list(el("div", "podpis", "Сейчас: " + tekO.split("").map(b => RU[b]).join(" → ") + ", по " + tekP +
+    " за удар. На все дни; запас под сегодняшние комбо бот не трогает."), poleO), el("section", "pult", knO, knP));
   v.append(el("p", "zametka", "Откроется чат с ботом — подтверди «да». Изменение увидишь здесь после следующего отчёта бота."));
 }
 
