@@ -105,6 +105,9 @@ details.cep[open]>summary .zag::after{transform:rotate(90deg)}
 .tablica{list-style:none}
 .tablica li{display:grid;grid-template-columns:22px 30px minmax(0,1fr) auto;gap:8px;align-items:center;padding:6px 0;border-top:1px dashed rgba(60,45,30,.35)}
 .tablica li:first-child{border-top:0;padding-top:0}
+.tablica.katal li{grid-template-columns:minmax(0,1fr) auto}
+.tablica.katal .nikbox{display:flex;flex-direction:column;align-items:flex-start;min-width:0}
+.tablica.katal small.ty{white-space:normal;font-size:11.5px;color:var(--karandash)}
 .tablica .mesto{font-size:12.5px;color:var(--karandash);text-align:center}
 .tablica .zn{color:var(--karandash)}
 .tablica li.ya .nik{background:linear-gradient(transparent 12%,rgba(242,210,28,.6) 12%,rgba(242,210,28,.6) 88%,transparent 88%);padding:0 3px;margin-left:-3px}
@@ -280,6 +283,8 @@ details.cep>summary::-webkit-details-marker{display:none}
 .och-pred{margin-top:8px}
 .och-pred:empty{display:none}
 .och-knopki{margin-top:10px}
+.kat-kn{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.kat-kn button[aria-pressed="true"]{filter:brightness(1.25);outline:2px solid #e8a33a}
 .podpis .limit,.podpis.limit{color:var(--krov)}
 .kalk-cel{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px}
 .kalk-cel .pole{width:96px;text-align:right}
@@ -709,6 +714,18 @@ function bossy(d, v, moy) {
       ryad(podpis(zdorove(b), "cifra"), podpis(num(b.m) ? Math.ceil(num(b.h) / num(b.m) * 100) + "%" : "", "cifra")),
       ryad(podpis(bkEst(d) ? "бои сегодня " + dw + "/" + lim : est(d.ub) ? "боёв сегодня: " + d.ub : ""), podpis(est(kill) ? "рекорд: " + vremya(kill) : "", "cifra")));
     if (sp) geroy.append(ryad(podpis("награда: " + nagrada(sp))));
+    // 14.11 (как в PrisonChiefBot): мой урон, доп. наколки за личный урон, сет режима
+    if (est(b.pd)) geroy.append(ryad(podpis("мой урон в бою"), podpis(chislo(num(b.pd)), "cifra")));
+    for (const p of arr(b.por)) {
+      const ost = Math.max(0, num(p) - num(b.pd));
+      geroy.append(ryad(podpis((ost ? "○ " : "● ") + "доп. наколка за " + sokr(num(p))),
+        podpis(ost ? "осталось " + sokr(ost) : "получена", "cifra")));
+    }
+    for (const r of arr(b.rs)) {
+      const [imya, est_, vsego, bon] = arr(r);
+      geroy.append(ryad(podpis("сет «" + str(imya) + "»" + (str(bon) ? ": " + str(bon) : "")),
+        podpis(chislo(num(est_)) + "/" + chislo(num(vsego)), "cifra")));
+    }
     if (id) { zhivoyKorobka = korobka; zhivoyId = id; }
   } else {
     geroy.append(el("p", "podpis centr", "бот начнёт новый бой в ближайшие 5 минут"));
@@ -717,7 +734,7 @@ function bossy(d, v, moy) {
 
   const f = arr(b.f);
   if (boy && f.length) {
-    v.append(zag("Урон в бою"));
+    v.append(zag("Урон в бою" + (f.length > 10 ? " — топ " + f.length : "")));
     listy(f.map((x, i) => {
       x = arr(x);
       const ya = moy != null && str(x[0]) === moy;
@@ -1321,12 +1338,27 @@ if (tg && tg.onEvent) {
 }
 
 // --- вкладка «Друзья» ---
+// 14.11 (как в PrisonChiefBot): состав бригады — лагерь за сутки, дни подряд без лагеря, дней в бригаде, таланты
+function brigadaBlok(d, v) {
+  const br = arr(d.br);
+  if (!br.length) return;
+  const ryady = br.map(x => arr(x)).sort((a, b) => num(b[4]) - num(a[4]) || num(a[3]) - num(b[3]));
+  const nebili = ryady.filter(x => !num(x[3])).length;
+  v.append(zag("Бригада — " + br.length + " чел."));
+  v.append(list(ryad(podpis("не били лагерь за сутки: " + nebili, "cifra"),
+    podpis(num(d.brt) ? "снимок " + new Date(num(d.brt) * 1000).toLocaleString("ru-RU", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "", "cifra"))));
+  listy(ryady.map(([nik, zv, dney, lag, bez, akt, tal]) => el("li", num(bez) >= 3 && num(dney) > 3 && !/Бригадир|Рулевой/.test(str(zv)) ? "ya" : "",
+    el("span", "nikbox", el("span", "nik", str(nik)), el("small", "ty", str(zv) + " · " + chislo(num(dney)) + " дн." + (est(tal) ? " · " + chislo(num(tal)) + " тал." : ""))),
+    el("span", "zn cifra", num(lag) ? "лагерь ✓" : (num(bez) ? "без лагеря " + chislo(num(bez)) + " дн." : "лагерь —")))), 8, "tablica katal").forEach(s => v.append(s));
+  v.append(el("p", "zametka", "Выделены — 3 дня подряд без лагеря и в бригаде больше 3 дней (бригадира и рулевых не помечаем). Урон за неделю по участникам игра публично не отдаёт."));
+}
 function druzya(d, v, moy) {
   const dn = num(d.dn);
   const s = list(ryad(el("span", "bolshoe zek cifra", chislo(d.dn) + " " + sklon(dn, ["друг", "друга", "друзей"]))),
     ryad(podpis("заявок сегодня: " + chislo(d.dz), "cifra"), podpis("всего: " + chislo(d.dzt), "cifra")));
   if (est(d.dvh)) s.append(ryad(podpis("входящих ждут: " + d.dvh, "cifra")));
   v.append(zag("Друзья"), s);
+  bezopasnoChast(v, () => brigadaBlok(d, v));
 
   const byut = new Set(arr(obj(d.b).f).filter(x => !(moy != null && str(arr(x)[0]) === moy)).map(klyuchIgroka));
   const dr = arr(d.dr);
@@ -1458,6 +1490,24 @@ function tekstSklada(d, ts, pf) {
     ": " + (doo > ts.spent ? (doo > ts.spent + 1 ? "≈ " : "") + "хватит до " + chislo(doo) + " " + sklon(doo, ["очка", "очков", "очков"]) + "."
       : "на следующее очко не хватит.");
 }
+// 14.11 (как в PrisonChiefBot): что выгоднее покупать — ожидаемый урон удара с сетами и критом (крит ×2) на рубль
+function uronZaRubl(d) {
+  const we = obj(d.we), wc = obj(d.wc), zp = zapasOruzhiya(d);
+  const ryady = ORUZHIE.map(([kod, imya, cena0]) => {
+    const [ud, kr] = arr(we[kod]), cena = num(wc[kod]) || cena0;
+    if (!num(ud)) return null;
+    const ozh = num(ud) * (1 + num(kr));
+    return { kod, imya, ud: num(ud), kr: num(kr), cena, ozh, naRub: ozh / cena, zapas: zp ? zp[kod] : null };
+  }).filter(Boolean).sort((a, b) => b.naRub - a.naRub);
+  if (!ryady.length) return null;
+  const s = el("ul", "spisok");
+  ryady.forEach((o, i) => s.append(el("li", "",
+    el("div", "", el("b", "zek", o.imya + (i === 0 ? " — выгоднее всего" : "")),
+      el("div", "podpis cifra", chislo(o.ud) + " за удар · крит " + Math.round(o.kr * 100) + "% · " + chislo(o.cena) + " руб."),
+      o.zapas != null ? el("div", "podpis cifra", "склад " + chislo(o.zapas) + " — " + sokr(o.zapas * o.ozh) + " урона") : null),
+    el("div", "zn", el("div", "cifra", chislo(Math.round(o.naRub))), el("div", "podpis", "урона за рубль")))));
+  return list(s, podpis("Ожидаемый урон = удар × (1 + шанс крита): крит бьёт вдвое. Урон — с собранными сетами, по данным игры."));
+}
 function kalkulyatorTalantov(d) {
   const ts = talantySost(d);
   if (!ts) return list(podpis("Калькулятор появится после ближайшего прогона бота: он пришлёт очки и пороги талантов."));
@@ -1512,10 +1562,49 @@ function kalkulyatorTalantov(d) {
   return s;
 }
 
+// 14.11 (как в PrisonChiefBot «Тату и Шмот»): каталог сетов с боевым бонусом — katalog.json рядом со страницей (363 сета),
+// собрано по каждому — d.sk {v: версия каталога, s: [[номер, есть]]} от бота
+let KATALOG = null;
+async function katalogSetov(d, v) {
+  const sk = obj(d.sk);
+  const korobka = el("div", "");
+  v.append(zag("Сеты — каталог"), korobka);
+  if (!KATALOG) {
+    korobka.append(el("p", "podpis", "Загружаю каталог…"));
+    try { KATALOG = await fetch("katalog.json", { cache: "no-cache" }).then(r => r.json()); }
+    catch (e) { korobka.replaceChildren(el("p", "zametka", "Каталог не загрузился — открой пульт ещё раз.")); return; }
+  }
+  const est = new Map(str(sk.v) === str(KATALOG.v) ? arr(sk.s).map(x => [num(arr(x)[0]), num(arr(x)[1])]) : []);
+  const sety = arr(KATALOG.s).map((x, i) => { x = arr(x); return { k: str(x[0]), n: str(x[1]), v: num(x[2]), b: str(x[3]), ist: str(x[4]), e: est.get(i) || 0 }; });
+  const sobrano = sety.filter(s => s.v && s.e >= s.v).length;
+  let filtr = "ne", bon = "";
+  const fBtn = (t, kod) => { const b = el("button", "", t); b.type = "button"; b.dataset.f = kod; b.onclick = () => { tuk("v"); filtr = kod; risuy(); }; return b; };
+  const bBtn = (t, kod) => { const b = el("button", "", t); b.type = "button"; b.dataset.b = kod; b.onclick = () => { tuk("v"); bon = bon === kod ? "" : kod; risuy(); }; return b; };
+  const spisok = el("div", "");
+  const shapkaK = list(ryad(el("span", "bolshoe zek cifra", chislo(sobrano) + " / " + chislo(sety.length)), podpis("сетов с бонусом собрано")),
+    !sk.v ? podpis("Сколько собрано, бот пришлёт после ближайшего прогона.") :
+      str(sk.v) !== str(KATALOG.v) ? podpis("Каталог обновился — собранное покажу после следующего прогона бота.") : null,
+    el("div", "och-forma kat-kn", fBtn("Не собраны", "ne"), fBtn("Собраны", "da"), fBtn("Все", "vse")),
+    el("div", "och-forma kat-kn", bBtn("яд", "яд"), bBtn("самопал", "самопал"), bBtn("финка", "финка"), bBtn("энергия", "энергия"), bBtn("бицуха", "бицуха")));
+  function risuy() {
+    shapkaK.querySelectorAll("button[data-f]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.f === filtr)));
+    shapkaK.querySelectorAll("button[data-b]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.b === bon)));
+    const vid = sety.filter(s => (filtr === "vse" || (filtr === "da" ? s.e >= s.v : s.e < s.v)) && (!bon || s.b.includes(bon)));
+    spisok.replaceChildren();
+    if (!vid.length) { spisok.append(el("p", "zametka", "Таких сетов нет.")); return; }
+    listy(vid.map(s => el("li", s.e >= s.v ? "" : (s.e ? "ya" : ""),
+      el("span", "nikbox", el("span", "nik", s.n), el("small", "ty", (s.k === "t" ? "наколки" : "одежда") + " · " + s.b + (s.ist ? " · " + s.ist : ""))),
+      el("span", "zn cifra", chislo(s.e) + "/" + chislo(s.v)))), 8, "tablica katal").forEach(l => spisok.append(l));
+  }
+  korobka.replaceChildren(shapkaK, spisok);
+  risuy();
+}
 function progress(d, v) {
   v.append(zag("Уровень"), kartaUrovnya(d));
   bezopasnoChast(v, () => v.append(zag("Калькулятор талантов"), kalkulyatorTalantov(d)));
+  bezopasnoChast(v, () => { const u = uronZaRubl(d); if (u) v.append(zag("Урон за рубль"), u); });
   v.append(zag("Цель стратегии"), celStrategii(d));
+  bezopasnoChast(v, () => katalogSetov(d, v));
   const ds = arr(d.ds);
   if (ds.length) v.append(zag("Достижения"), list(
     ryad(el("span", "bolshoe zek cifra", chislo(ds[0]) + " " + sklon(num(ds[0]), ["очко", "очка", "очков"]))),
