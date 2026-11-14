@@ -697,6 +697,7 @@ function svodka(d, v) {
   const pyat = zhurnalNovyeSverhu(d).slice(0, 5);
   v.append(zag("Последние действия", "zhurnal"),
     klik(list(el("ul", "dela", ...(pyat.length ? pyat.map(zapis) : [el("li", "", el("span", "vr", ""), el("span", "tx", "пока ничего"))]))), "zhurnal"));
+  bezopasnoChast(v, () => valyutyDnya(d, v));   // 14.11 (как в PrisonChiefBot): валюты за сегодня
 }
 
 // --- вкладка «Боссы» ---
@@ -1370,6 +1371,7 @@ function druzya(d, v, moy) {
   v.append(zag("Друзья"), s);
   bezopasnoChast(v, () => brigadaBlok(d, v));
   bezopasnoChast(v, () => reydyBlok(d, v));
+  bezopasnoChast(v, () => zayavkiBlok(d, v));
 
   const byut = new Set(arr(obj(d.b).f).filter(x => !(moy != null && str(arr(x)[0]) === moy)).map(klyuchIgroka));
   const dr = arr(d.dr);
@@ -1610,6 +1612,59 @@ async function katalogSetov(d, v) {
   korobka.replaceChildren(shapkaK, spisok);
   risuy();
 }
+// 14.11 (как в PrisonChiefBot «Валюты за сегодня»): остаток и прирост с начала суток
+const VAL_RU = { cigarettes: "Сигареты", rubles: "Рубли", sugar: "Сахар", soap: "Мыло", paper: "Бумага", chefir: "Чифир",
+  sprats: "Шпроты", stew: "Тушёнка", signet: "Печатки", chips: "Фишки", fortune_tickets: "Билеты фортуны" };
+function valyutyDnya(d, v) {
+  const vd = obj(d.vd), kl = Object.keys(VAL_RU).filter(k => Array.isArray(vd[k]));
+  if (!kl.length) return;
+  v.append(zag("Валюты за сегодня"));
+  listy(kl.map(k => { const [n, dl] = arr(vd[k]);
+    return el("li", "", el("span", "nikbox", el("span", "nik", VAL_RU[k])),
+      el("span", "zn cifra", sokr(num(n)) + (est(dl) && num(dl) ? (num(dl) > 0 ? "  +" : "  −") + sokr(Math.abs(num(dl))) : ""))); }),
+    6, "tablica katal").forEach(s => v.append(s));
+}
+// 14.11 (как в PrisonChiefBot «Друзья»): входящие заявки, которые ждут решения, — таланты и урон оружия заявителя
+function zayavkiBlok(d, v) {
+  const zv = arr(d.zv).map(arr);
+  if (!zv.length) return;
+  v.append(zag("Заявки ждут решения — " + zv.length));
+  listy(zv.map(([id, nik, tal, u]) => { u = obj(u);
+    const ur = ["poison", "gunshot", "knife"].filter(k => est(u[k])).map(k => ({ poison: "яд", gunshot: "самопал", knife: "финка" }[k]) + " " + sokr(num(u[k]))).join(" · ");
+    return el("li", "", el("span", "nikbox", el("span", "nik", str(nik)), el("small", "ty", "ID " + str(id) + (ur ? " · " + ur : ""))),
+      el("span", "zn cifra", est(tal) ? chislo(num(tal)) + " тал." : "—")); }), 8, "tablica katal").forEach(s => v.append(s));
+  v.append(el("p", "zametka", "Принять или отклонить — в боте: «🏠 Меню» → «Друзья» → «Заявки». От 400 талантов бот принимает сам, слабее — отклоняет."));
+}
+// 14.11 (как в PrisonChiefBot «Лудка» и «События»): катала, Люська, что идёт в игре
+function ludkaSobytiya(d, v) {
+  const kat = arr(d.kat), lus = arr(d.lus), ev = arr(d.ev).map(arr);
+  if (!kat.length && !lus.length && !ev.length) return;
+  const s = list();
+  if (kat.length) s.append(ryad(podpis("Катала: ур. " + chislo(num(kat[0])) + " · игр " + chislo(num(kat[2]))), podpis(str(kat[3]) ? "бесплатная с " + str(kat[3]) : "", "cifra")));
+  if (lus.length) s.append(ryad(podpis("Люська: открыто ячеек"), podpis(num(lus[0]) + " / " + num(lus[1]) + " (бот — только бесплатную)", "cifra")));
+  const IMENA = { otrabotka: "Отработка", battle_train: "По этапу", shodnyak: "Сходняк", lets_cook: "Пора варить", boss_chests: "Сундуки боссов", sugar_chests: "Сахарные сундуки" };
+  for (const [tip, st, doo, zabrat] of ev) s.append(ryad(podpis("Событие: " + (IMENA[str(tip)] || str(tip))), podpis((str(doo) ? "до " + str(doo) : "") + (str(zabrat) ? " · забрать до " + str(zabrat) : ""), "cifra")));
+  v.append(zag("Лудка и события"), s);
+}
+// 14.11 (как в PrisonChiefBot «Настройки»): какие вкладки показывать — у каждого зрителя свои, в этом браузере
+const SKRYTY = "tyuryaga_skryty";
+function skrytyeVkladki() { try { return JSON.parse(localStorage.getItem(SKRYTY) || "[]"); } catch (e) { return []; } }
+function primenitSkrytye() {
+  const sk = skrytyeVkladki();
+  for (const v of VKLADKI) { const kn = document.getElementById("t-" + v); if (kn) kn.hidden = sk.includes(v) && v !== "svodka" && v !== "pult"; }
+}
+function nastroykiVkladok() {
+  const IM = { bossy: "Боссы", druzya: "Друзья", obshchak: "Общак", progress: "Прогресс", zhurnal: "Журнал" };
+  const s = list(podpis("Скрытые вкладки пропадут из нижнего меню (только у тебя, в этом телефоне)."));
+  for (const v of Object.keys(IM)) {
+    const cb = el("input", ""); cb.type = "checkbox"; cb.checked = !skrytyeVkladki().includes(v); cb.id = "sk-" + v;
+    cb.onchange = () => { let sk = skrytyeVkladki().filter(x => x !== v); if (!cb.checked) sk.push(v);
+      try { localStorage.setItem(SKRYTY, JSON.stringify(sk)); } catch (e) {} primenitSkrytye(); };
+    const lb = el("label", "ryad", cb, el("span", "", IM[v])); lb.htmlFor = cb.id;
+    s.append(lb);
+  }
+  return s;
+}
 // 14.11 (как в PrisonChiefBot «Ходки»): тюрьмы — этап дня/ночи, ходок всего, рейтинг
 function tyurmyBlok(d, v) {
   const ty = arr(d.ty).map(arr);
@@ -1735,6 +1790,7 @@ function obshchak(d, v) {
     const [den, chas] = str(x[0]).split(" ");
     return el("li", "", el("span", "vr cifra", chas || den), el("span", "tx", (chas ? den + " · " : "") + "игла " + sokr(x[1]) + " → " + sokr(x[2])));
   }))));
+  bezopasnoChast(v, () => ludkaSobytiya(d, v));   // 14.11: катала, Люська, события
 }
 
 // --- вкладка «Журнал» ---
@@ -1832,8 +1888,10 @@ let D = null;
     OSHIBKA = r.oshibka || "bitye";
     document.getElementById("oshibka").textContent = OSHIBKI[OSHIBKA] || OSHIBKI.bitye;
   }
+  try { document.getElementById("v-pult").append(zag("Вкладки"), nastroykiVkladok()); primenitSkrytye(); } catch (e) {}   // 14.11
   let s = "svodka";
   try { s = sessionStorage.getItem(PAMYAT) || s; } catch (e) {}
+  if (skrytyeVkladki().includes(s)) s = "svodka";
   pokazat(s, true);
 })();
 
