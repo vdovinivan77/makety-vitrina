@@ -1352,6 +1352,16 @@ function brigadaBlok(d, v) {
     el("span", "zn cifra", num(lag) ? "лагерь ✓" : (num(bez) ? "без лагеря " + chislo(num(bez)) + " дн." : "лагерь —")))), 8, "tablica katal").forEach(s => v.append(s));
   v.append(el("p", "zametka", "Выделены — 3 дня подряд без лагеря и в бригаде больше 3 дней (бригадира и рулевых не помечаем). Урон за неделю по участникам игра публично не отдаёт."));
 }
+// 14.11 (как в PrisonChiefBot «Новости и Рейды»): бригадные рейды из канала игры — день, время, бригада, цель урона
+function reydyBlok(d, v) {
+  const rd = arr(d.rd);
+  if (!rd.length) return;
+  v.append(zag("Рейды бригад"));
+  listy(rd.map(x => { const [den, vr, imya, ur] = arr(x);
+    return el("li", "", el("span", "nikbox", el("span", "nik", str(imya)), el("small", "ty", str(den) + " · " + str(vr) + " МСК")),
+      el("span", "zn cifra", "цель " + sokr(num(ur)))); }), 8, "tablica katal").forEach(s => v.append(s));
+  v.append(el("p", "zametka", "Из канала игры. Бот первым зовёт в друзья участников этих бригад — их урон идёт и по нашим боссам."));
+}
 function druzya(d, v, moy) {
   const dn = num(d.dn);
   const s = list(ryad(el("span", "bolshoe zek cifra", chislo(d.dn) + " " + sklon(dn, ["друг", "друга", "друзей"]))),
@@ -1359,6 +1369,7 @@ function druzya(d, v, moy) {
   if (est(d.dvh)) s.append(ryad(podpis("входящих ждут: " + d.dvh, "cifra")));
   v.append(zag("Друзья"), s);
   bezopasnoChast(v, () => brigadaBlok(d, v));
+  bezopasnoChast(v, () => reydyBlok(d, v));
 
   const byut = new Set(arr(obj(d.b).f).filter(x => !(moy != null && str(arr(x)[0]) === moy)).map(klyuchIgroka));
   const dr = arr(d.dr);
@@ -1599,6 +1610,29 @@ async function katalogSetov(d, v) {
   korobka.replaceChildren(shapkaK, spisok);
   risuy();
 }
+// 14.11 (как в PrisonChiefBot «Ходки»): тюрьмы — этап дня/ночи, ходок всего, рейтинг
+function tyurmyBlok(d, v) {
+  const ty = arr(d.ty).map(arr);
+  if (!ty.length) return;
+  v.append(zag("Ходки по тюрьмам"));
+  listy(ty.map(([id, imya, dc, dv, dr, nc, nv, nr, drt, nrt]) => el("li", "",
+    el("span", "nikbox", el("span", "nik", str(imya)),
+      el("small", "ty", "☼ этап " + num(dc) + "/" + num(dv) + " · ходок " + chislo(num(dr)) + " · рейтинг " + sokr(num(drt)) +
+        "  ☾ этап " + num(nc) + "/" + num(nv) + " · ходок " + chislo(num(nr)))),
+    el("span", "zn cifra", chislo(num(dr) + num(nr))))), 8, "tablica katal").forEach(s => v.append(s));
+  v.append(el("p", "zametka", "Бот ходит сам: днём — в Бутырку и по заданиям зарубы, ночью — пока не ходит. Обновляется раз в 3 часа."));
+}
+// 14.11 (как в PrisonChiefBot «Делюги»): календарь месяца — задание каждого дня и статус
+function kalendarBlok(d, v) {
+  const k = obj(d.kal), dni = arr(k.d).map(arr);
+  if (!dni.length) return;
+  const znak = { "1": "✓", "-1": "✗", "0": "●", "2": "·" };
+  v.append(zag("Делюги месяца — " + str(k.s)));
+  listy(dni.map(([i, t, st, pr, cel]) => el("li", num(st) === 0 ? "ya" : "",
+    el("span", "nikbox", el("span", "nik", num(i) + ". " + str(t)),
+      el("small", "ty", num(st) === 1 ? "выполнено" : num(st) === -1 ? "просрочено" : num(st) === 0 ? "сегодня: " + chislo(num(pr)) + " / " + chislo(num(cel)) : "впереди")),
+    el("span", "zn cifra", znak[String(num(st))] || ""))), 8, "tablica katal").forEach(s => v.append(s));
+}
 function progress(d, v) {
   v.append(zag("Уровень"), kartaUrovnya(d));
   bezopasnoChast(v, () => v.append(zag("Калькулятор талантов"), kalkulyatorTalantov(d)));
@@ -1619,8 +1653,16 @@ function progress(d, v) {
       return el("li", "", ryad(el("span", "imya", str(z[0]) || "—"),
         podpis(chislo(z[1]) + " / " + chislo(z[2]) + (nado && cur >= nado ? " ✓" : ""), "cifra")), polosa(nado ? cur / nado : 0, "tonk"));
     }));
-    v.append(zag("Заруба"), list(zr.length ? ul : null, str(d.zre) ? el("p", "podpis konec", "конец зарубы: " + str(d.zre) + " МСК") : null));
+    const zu = arr(d.zu);                                   // 14.11: уровень зарубы, печатки, лимиты режимов
+    const urov = zu.length && est(zu[0]) ? list(ryad(el("span", "bolshoe zek cifra", "Ур. " + chislo(num(zu[0]))),
+        podpis("печатки " + chislo(num(zu[3])) + " · руда " + chislo(num(zu[4])), "cifra")),
+      polosa(num(zu[2]) ? num(zu[1]) / num(zu[2]) : 0, "tonk"),
+      ryad(podpis("до следующего: " + chislo(num(zu[1])) + " / " + chislo(num(zu[2])), "cifra"),
+        podpis(Object.entries(obj(zu[5])).map(([k, n]) => ({ blat: "блатные", avtoritet: "авторитетные", vorovskoy: "воровские" }[k] || k) + " " + num(n)).join(" · "), "cifra"))) : null;
+    v.append(zag("Заруба"), ...(urov ? [urov] : []), list(zr.length ? ul : null, str(d.zre) ? el("p", "podpis konec", "конец зарубы: " + str(d.zre) + " МСК") : null));
   }
+  bezopasnoChast(v, () => kalendarBlok(d, v));
+  bezopasnoChast(v, () => tyurmyBlok(d, v));
 
   const h = arr(d.h).map(arr).filter(x => x.length);
   v.append(zag("По дням"));
@@ -1671,6 +1713,14 @@ function obshchak(d, v) {
     ? el("ul", "kombo", ...km.map(x => el("li", "", el("span", "zek", str(x[0]) + " · " + str(x[1])),
         el("span", "podpis " + (kl[String(num(x[3]))] || "zhdi"), str(x[2])))))
     : podpis("Сегодня комбо не было. Перешли разгадку боту в чат — он пробьёт сам.")));
+  const ks = arr(d.ks).map(arr).filter(x => x.length);     // 14.11: история комбо по боссам за всё время бота
+  if (ks.length) {
+    const vsegoOk = ks.reduce((a, x) => a + num(x[1]), 0), vsegoNet = ks.reduce((a, x) => a + num(x[2]), 0);
+    v.append(zag("История комбо"), list(ryad(el("span", "bolshoe zek cifra", chislo(vsegoOk)), podpis("прошло · сорвалось " + chislo(vsegoNet), "cifra"))));
+    listy(ks.map(([id, ok, net]) => el("li", "", el("span", "nikbox", el("span", "nik", imyaBossa(celoe(id))),
+      el("small", "ty", "№" + celoe(id))), el("span", "zn cifra", chislo(num(ok)) + " ✓" + (num(net) ? " · " + chislo(num(net)) + " ✗" : "")))),
+      8, "tablica katal").forEach(s => v.append(s));
+  }
 
   const or = arr(d.or);
   const plashka = (imya, n, pod) => el("div", "zapas", el("div", "", el("span", "", imya), el("b", "cifra", est(n) ? chislo(n) : "—"),
