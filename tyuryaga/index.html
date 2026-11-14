@@ -15,14 +15,14 @@
   --noch:#0d0b09; --kozha:#2b1f17; --kozha2:#3a2a1f; --krem:#f1e6cf; --chernila:#2a2119; --karandash:#6b5d4f;
   --oranzh:#e8772a; --zhelt:#f2d21c; --krov:#c8322c; --zelen:#3f8f3a;
   --niz:max(env(safe-area-inset-bottom, 0px), var(--tg-safe-area-inset-bottom, 0px));   /* полоска «домой» снизу */
-  --tabh:62px;
+  --tabh:0px; --verh:52px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 [hidden]{display:none!important}
 html{background:var(--noch)}
 body{min-height:100vh;color:var(--krem);font:15px/1.4 Calibri,"Segoe UI",system-ui,-apple-system,sans-serif;
   -webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;overflow-x:hidden;
-  padding:12px 14px calc(var(--tabh) + 22px + var(--niz))}
+  padding:calc(var(--verh) + 10px + var(--tg-content-safe-area-inset-top, 0px)) 14px calc(22px + var(--niz))}
 /* фон — неподвижным слоем: в Telegram на iPhone background-attachment:fixed не работает и фон растягивался по длинной странице */
 body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
   background:linear-gradient(rgba(10,8,6,.55),rgba(10,8,6,.8)),
@@ -204,29 +204,46 @@ details.cep>summary::-webkit-details-marker{display:none}
 .lg-pole{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px}
 .lg-pole label{display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--karandash);min-width:0}
 .lg-pole input,.lg-pole select{font-size:16px;padding:7px 6px;border-radius:8px;border:1px solid #6b5640;background:#fffaf0;color:#1b130d;width:100%;min-width:0}
-.vkladki,.pult{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}   /* без синих маркеров и «Сохранить изображение» */
-.vkladki img{-webkit-user-drag:none}
+.pult{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}   /* без синих маркеров и «Сохранить изображение» */
 .pult button:active{transform:translateY(2px);box-shadow:0 1px 0 #1b130d}
 .spravka li b{color:#231a12;font-size:14px;flex:none}
 .spravka li span{text-align:right;color:var(--karandash);font-size:13.5px}
 .pusto{margin-top:24px;padding:28px 18px;text-align:center}
 .staroe{margin:8px 0 2px;padding:8px 12px;border-radius:5px;font-size:13.5px;color:#1d140d;background:var(--zhelt);box-shadow:0 2px 0 #8a7406}
 
-/* вкладки — тёмная кожа внизу, активная жёлтая, как кнопки игры */
-.vkladki{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px;
-  padding:6px 6px calc(6px + var(--niz));
-  background:linear-gradient(#3a2a1f,#1f160f);border-top:2px solid #120c08;
-  box-shadow:0 -6px 16px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.08)}
-.vkladki button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;height:50px;min-width:0;padding:0 1px;
-  border:1.5px solid #120c08;border-radius:5px;cursor:pointer;color:#c6b08f;overflow:hidden;
-  background:linear-gradient(#33251b,#251a12);box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 2px 0 #0b0705;
-  font:11px/1 "PrisonFont",Impact,"Arial Black",sans-serif;letter-spacing:.02em;text-transform:uppercase}
-.vkladki button img{width:22px;height:22px;object-fit:contain;pointer-events:none}
-.vkladki button[aria-selected="true"]{color:#1b130d;border-color:#1b130d;
+/* 14.11 (как в PrisonChiefBot): полоса сверху с ☰ и шторка разделов слева — тёмная кожа, активный пункт жёлтый */
+.verh{position:fixed;left:0;right:0;top:0;z-index:30;display:flex;align-items:center;gap:10px;
+  height:calc(var(--verh) + var(--tg-content-safe-area-inset-top, 0px));padding:var(--tg-content-safe-area-inset-top, 0px) 10px 0;
+  background:linear-gradient(#3a2a1f,#1f160f);border-bottom:2px solid #120c08;box-shadow:0 6px 16px rgba(0,0,0,.55)}
+.burger{flex:none;width:40px;height:38px;display:grid;place-items:center;border:1.5px solid #120c08;border-radius:5px;cursor:pointer;
   background:linear-gradient(#ffe45a,var(--zhelt) 55%,#d9b40e);box-shadow:0 2px 0 #1b130d}
-.vkladki button:active{transform:translateY(1px)}
-@media (max-width:420px){.vkladki button{font-size:9.5px;letter-spacing:0}.vkladki button img{width:20px;height:20px}}
-@media (max-width:350px){.vkladki button{font-size:8.5px}.vkladki button img{width:18px;height:18px}}
+.burger i{display:block;width:20px;height:2.5px;background:#1b130d;border-radius:2px;box-shadow:0 -6px 0 #1b130d,0 6px 0 #1b130d}
+.burger:active{transform:translateY(1px)}
+.verh-imya{flex:1;min-width:0;display:flex;align-items:center;gap:8px;font-size:17px;color:var(--krem);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.verh-imya img{width:24px;height:24px;object-fit:contain;flex:none}
+.verh .shtamp{transform:rotate(-4deg);font-size:10.5px;padding:2px 7px;border-width:2px;flex:none}
+.zatemn{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .22s}
+.shtorka{position:fixed;left:0;top:0;bottom:0;z-index:41;width:min(82vw,300px);display:flex;flex-direction:column;
+  transform:translateX(-102%);transition:transform .25s cubic-bezier(.2,.8,.2,1);
+  background:linear-gradient(90deg,#2b1f17,#1f160f);border-right:2px solid #120c08;box-shadow:8px 0 24px rgba(0,0,0,.6);
+  padding:calc(12px + var(--tg-content-safe-area-inset-top, 0px)) 10px calc(12px + var(--niz))}
+body.otkryto .shtorka{transform:none}
+body.otkryto .zatemn{opacity:1;pointer-events:auto}
+body.otkryto{overflow:hidden}
+.shtorka-verh{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:2px 4px 10px;border-bottom:1px solid rgba(255,255,255,.08)}
+.shtorka-verh b{font-size:22px;color:var(--krem);text-shadow:0 2px 0 #000}
+.shtorka-verh small{font-size:11.5px;color:#bfae93}
+.shtorka nav{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:8px 0;display:flex;flex-direction:column;gap:3px}
+.shtorka nav button{display:flex;align-items:center;gap:10px;width:100%;min-height:39px;padding:6px 10px;text-align:left;cursor:pointer;
+  border:1.5px solid transparent;border-radius:5px;background:none;color:#d8c5a6;
+  font:14px/1.1 "PrisonFont",Impact,"Arial Black",sans-serif;letter-spacing:.02em;text-transform:uppercase}
+.shtorka nav button img{width:24px;height:24px;object-fit:contain;flex:none;pointer-events:none}
+.shtorka nav button[aria-current="page"]{color:#1b130d;border-color:#1b130d;background:linear-gradient(#ffe45a,var(--zhelt) 55%,#d9b40e);box-shadow:0 2px 0 #1b130d}
+.shtorka nav button:not([aria-current="page"]):active{background:rgba(255,255,255,.06)}
+.shtorka nav .gr{margin:8px 6px 2px;font-size:11px;color:#8f7c62;letter-spacing:.06em;text-transform:uppercase}
+.shtorka,.verh{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.shtorka img{-webkit-user-drag:none}
+@media (prefers-reduced-motion:reduce){.shtorka,.zatemn{transition:none}}
 .kombo li{display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px dashed rgba(60,40,20,.25)}
 .kombo li:last-child{border-bottom:0}
 .kombo .ok{color:#2f6b1f}.kombo .net{color:#9b2a1c}.kombo .zhdi{color:var(--karandash)}
@@ -296,6 +313,11 @@ details.cep>summary::-webkit-details-marker{display:none}
 </style>
 </head>
 <body>
+<div class="verh" id="verh">
+  <button class="burger" id="burger" type="button" aria-label="Разделы" aria-controls="shtorka" aria-expanded="false"><i></i></button>
+  <span class="verh-imya zek" id="verhImya">Главная</span>
+  <span id="verhShtamp" class="shtamp zek">работает</span>
+</div>
 <header class="shapka" id="shapka">
   <h1 class="zek">Тюряга</h1>
   <span id="rezhim" class="shtamp zek">работает</span>
@@ -305,13 +327,13 @@ details.cep>summary::-webkit-details-marker{display:none}
 <p id="oshibka" class="pusto list" hidden></p>
 
 <main>
-  <section id="v-svodka" class="vkladka" role="tabpanel" aria-labelledby="t-svodka"></section>
-  <section id="v-bossy" class="vkladka" role="tabpanel" aria-labelledby="t-bossy" hidden></section>
-  <section id="v-druzya" class="vkladka" role="tabpanel" aria-labelledby="t-druzya" hidden></section>
-  <section id="v-obshchak" class="vkladka" role="tabpanel" aria-labelledby="t-obshchak" hidden></section>
-  <section id="v-progress" class="vkladka" role="tabpanel" aria-labelledby="t-progress" hidden></section>
-  <section id="v-zhurnal" class="vkladka" role="tabpanel" aria-labelledby="t-zhurnal" hidden></section>
-  <section id="v-pult" class="vkladka" role="tabpanel" aria-labelledby="t-pult" hidden>
+  <section id="v-svodka" class="vkladka"></section>
+  <section id="v-bossy" class="vkladka" hidden></section>
+  <section id="v-druzya" class="vkladka" hidden></section>
+  <section id="v-obshchak" class="vkladka" hidden></section>
+  <section id="v-progress" class="vkladka" hidden></section>
+  <section id="v-zhurnal" class="vkladka" hidden></section>
+  <section id="v-pult" class="vkladka" hidden>
     <h2 class="zag zek">Пульт</h2>
     <section class="pult" id="pult">
       <button class="glavnaya" id="knStart" type="button">Включить бота</button>
@@ -340,15 +362,11 @@ details.cep>summary::-webkit-details-marker{display:none}
   </section>
 </main>
 
-<nav class="vkladki" role="tablist" aria-label="Разделы">
-  <button id="t-svodka" type="button" role="tab" aria-controls="v-svodka" aria-selected="true" data-v="svodka"><img alt="" src="https://oldprison-prod-assets-cdn-yandex.luckygem.online/assets/Guild/all/talantClanIcon.webp">Сводка</button>
-  <button id="t-bossy" type="button" role="tab" aria-controls="v-bossy" aria-selected="false" data-v="bossy"><img alt="" src="https://oldprison-prod-assets-cdn-yandex.luckygem.online/assets/PrisonV3/weeklyTop/icon_Uron.webp">Боссы</button>
-  <button id="t-druzya" type="button" role="tab" aria-controls="v-druzya" aria-selected="false" data-v="druzya"><img alt="" src="https://oldprison-prod-assets-cdn-yandex.luckygem.online/assets/Guild/all/clan_invite_icon.webp">Друзья</button>
-  <button id="t-obshchak" type="button" role="tab" aria-controls="v-obshchak" aria-selected="false" data-v="obshchak"><img alt="" src="https://oldprison-prod-assets-cdn-yandex.luckygem.online/assets/HUD/rubles.png">Общак</button>
-  <button id="t-progress" type="button" role="tab" aria-controls="v-progress" aria-selected="false" data-v="progress"><img alt="" src="https://oldprison-prod-assets-cdn-yandex.luckygem.online/assets/HUD/authority.png">Прогресс</button>
-  <button id="t-zhurnal" type="button" role="tab" aria-controls="v-zhurnal" aria-selected="false" data-v="zhurnal"><img alt="" src="https://oldprison-prod-assets-cdn-yandex.luckygem.online/assets/HUD/paper.png">Журнал</button>
-  <button id="t-pult" type="button" role="tab" aria-controls="v-pult" aria-selected="false" data-v="pult"><img alt="" src="https://oldprison-prod-assets-cdn-yandex.luckygem.online/assets/FortuneScene/klutsi_icon.webp">Пульт</button>
-</nav>
+<div class="zatemn" id="zatemn"></div>
+<aside class="shtorka" id="shtorka" aria-label="Разделы" aria-hidden="true">
+  <div class="shtorka-verh"><b class="zek">Тюряга</b><small id="shtorkaVremya"></small></div>
+  <nav id="menu"></nav>
+</aside>
 
 <script>
 "use strict";
@@ -1648,19 +1666,16 @@ function ludkaSobytiya(d, v) {
 }
 // 14.11 (как в PrisonChiefBot «Настройки»): какие вкладки показывать — у каждого зрителя свои, в этом браузере
 const SKRYTY = "tyuryaga_skryty";
-function skrytyeVkladki() { try { return JSON.parse(localStorage.getItem(SKRYTY) || "[]"); } catch (e) { return []; } }
-function primenitSkrytye() {
-  const sk = skrytyeVkladki();
-  for (const v of VKLADKI) { const kn = document.getElementById("t-" + v); if (kn) kn.hidden = sk.includes(v) && v !== "svodka" && v !== "pult"; }
-}
+function skrytyeVkladki() { try { const a = JSON.parse(localStorage.getItem(SKRYTY) || "[]"); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
+function primenitSkrytye() { postroitMenu(); }
 function nastroykiVkladok() {
-  const IM = { bossy: "Боссы", druzya: "Друзья", obshchak: "Общак", progress: "Прогресс", zhurnal: "Журнал" };
-  const s = list(podpis("Скрытые вкладки пропадут из нижнего меню (только у тебя, в этом телефоне)."));
-  for (const v of Object.keys(IM)) {
-    const cb = el("input", ""); cb.type = "checkbox"; cb.checked = !skrytyeVkladki().includes(v); cb.id = "sk-" + v;
-    cb.onchange = () => { let sk = skrytyeVkladki().filter(x => x !== v); if (!cb.checked) sk.push(v);
+  const s = list(podpis("Снятые разделы пропадут из шторки (только у тебя, в этом телефоне)."));
+  for (const r of RZ) {
+    if (r.id === "glavnaya" || r.id === "nastroyki") continue;
+    const cb = el("input", ""); cb.type = "checkbox"; cb.checked = !skrytyeVkladki().includes(r.id); cb.id = "sk-" + r.id;
+    cb.onchange = () => { let sk = skrytyeVkladki().filter(x => x !== r.id); if (!cb.checked) sk.push(r.id);
       try { localStorage.setItem(SKRYTY, JSON.stringify(sk)); } catch (e) {} primenitSkrytye(); };
-    const lb = el("label", "ryad", cb, el("span", "", IM[v])); lb.htmlFor = cb.id;
+    const lb = el("label", "ryad", cb, el("span", "", r.n)); lb.htmlFor = cb.id;
     s.append(lb);
   }
   return s;
@@ -1806,6 +1821,8 @@ function shapka(d) {
   const rz = document.getElementById("rezhim");
   if (d.p === true || num(d.p)) { rz.classList.add("pauza"); rz.textContent = str(d.pd) ? "пауза до " + str(d.pd) : "на паузе"; }
   document.getElementById("obnovleno").textContent = "Обновлено " + (str(d.t) || "—") + " МСК";
+  const vs = document.getElementById("verhShtamp"); vs.textContent = rz.textContent; vs.classList.toggle("pauza", rz.classList.contains("pauza"));
+  document.getElementById("shtorkaVremya").textContent = str(d.t) ? "данные " + str(d.t) : "";
   if (est(d.ts)) {
     const min = Math.round((Date.now() / 1000 - num(d.ts)) / 60);
     if (min > 15) {
@@ -1823,36 +1840,122 @@ const OSHIBKI = {
 };
 let OSHIBKA = null;
 
-// --- вкладки ---
+// --- 14.11: разделы в шторке (как в PrisonChiefBot). Вкладки остались контейнерами; раздел = вкладка + блоки по заголовку.
+// b — начала заголовков блоков; null — вся вкладка; ost — ещё и блоки вкладки, которых нет ни в одном разделе (ничего не теряется).
 const VKLADKI = ["svodka", "bossy", "druzya", "obshchak", "progress", "zhurnal", "pult"];
-const PAMYAT = "tyuryaga_vkladka";
-let aktivnaya = "svodka";
-function pokazat(imya, bezProkrutki) {
-  if (!VKLADKI.includes(imya)) imya = "svodka";
-  aktivnaya = imya;
+const IK = A + "/";
+const RAZDELY = [
+  { id: "glavnaya", n: "Главная", ic: "Guild/all/talantClanIcon.webp", v: "svodka", b: null },
+  { gr: "Бой" },
+  { id: "boy", n: "Боссы", ic: "PrisonV3/weeklyTop/icon_Uron.webp", v: "bossy", b: ["Текущий бой", "Урон в бою", "Ключи", "Быстро"] },
+  { id: "ochered", n: "Очередь боссов", ic: "HUD/paper.png", v: "bossy", b: ["Очередь", "Цепочка"], ost: true },
+  { id: "kombo", n: "Комбо", ic: "FortuneScene/klutsi_icon.webp", v: "obshchak", b: ["Комбо", "История комбо", "Оружие под комбо"] },
+  { id: "obshchak", n: "Общак", ic: "HUD/rubles.png", v: "obshchak", b: ["Игла", "Сборы общака", "Валюта"], ost: true },
+  { gr: "Люди" },
+  { id: "druzya", n: "Друзья", ic: "Guild/all/clan_invite_icon.webp", v: "druzya", b: ["Друзья", "Заявки", "Список"], ost: true },
+  { id: "brigada", n: "Бригада и рейды", ic: "Guild/all/talantClanIcon.webp", v: "druzya", b: ["Бригада", "Рейды"] },
+  { id: "lager", n: "Лагерь", ic: "HUD/authority.png", v: "pult", b: ["Лагерь"] },
+  { gr: "Прокачка" },
+  { id: "progress", n: "Прогресс", ic: "HUD/authority.png", v: "progress", b: ["Уровень", "Цель стратегии", "Достижения", "По дням"], ost: true },
+  { id: "talanty", n: "Таланты и урон", ic: "PrisonV3/weeklyTop/icon_Uron.webp", v: "progress", b: ["Калькулятор талантов", "Урон за рубль"] },
+  { id: "sety", n: "Тату и шмот", ic: "HUD/authority.png", v: "progress", b: ["Сеты"] },
+  { id: "zaruba", n: "Заруба", ic: "HUD/rubles.png", v: "progress", b: ["Заруба"] },
+  { id: "delyugi", n: "Делюги", ic: "HUD/paper.png", v: "progress", b: ["Делюги"] },
+  { id: "hodki", n: "Ходки", ic: "HUD/paper.png", v: "progress", b: ["Ходки"] },
+  { id: "ludka", n: "Лудка и события", ic: "FortuneScene/klutsi_icon.webp", v: "obshchak", b: ["Лудка"] },
+  { gr: "Бот" },
+  { id: "zhurnal", n: "Журнал", ic: "HUD/paper.png", v: "zhurnal", b: null },
+  { id: "pult", n: "Пульт", ic: "FortuneScene/klutsi_icon.webp", v: "pult", b: ["Пульт", "Как часто", "Команды"], ost: true },
+  { id: "nastroyki", n: "Настройки", ic: "HUD/paper.png", v: "pult", b: ["Разделы меню"] },
+];
+const RZ = RAZDELY.filter(r => r.id);
+const PAMYAT = "tyuryaga_razdel";
+let aktivnaya = "svodka", tekRazdel = "glavnaya";
+const nazvBloka = u => {
+  if (u.matches && u.matches("h2.zag")) return u.textContent.trim();
+  const z = u.querySelector && u.querySelector(".zag");
+  return z && (u.tagName === "DETAILS" || u.firstElementChild === z || u.firstElementChild?.contains(z)) ? z.textContent.trim() : null;
+};
+function razmetitBloki() {                                 // каждому верхнему элементу вкладки — заголовок его блока
   for (const v of VKLADKI) {
-    document.getElementById("v-" + v).hidden = v !== imya;
-    const kn = document.getElementById("t-" + v);
-    kn.setAttribute("aria-selected", v === imya ? "true" : "false");
-    kn.tabIndex = v === imya ? 0 : -1;
+    let tek = "";
+    for (const u of document.getElementById("v-" + v).children) {
+      const n = nazvBloka(u);
+      if (n !== null) tek = n;
+      u.dataset.blok = tek;
+    }
   }
-  document.getElementById("shapka").classList.toggle("mini", imya !== "svodka");
-  document.getElementById("oshibka").hidden = !OSHIBKA || imya === "pult";
-  try { sessionStorage.setItem(PAMYAT, imya); } catch (e) {}
+}
+const podhodit = (blok, b) => b.some(p => blok.startsWith(p));
+function vidim(r, blok) {
+  if (!r.b || !blok) return true;
+  if (podhodit(blok, r.b)) return true;
+  return !!r.ost && !RZ.some(x => x.v === r.v && x.b && podhodit(blok, x.b));
+}
+function otkryt(id, bezProkrutki) {
+  const r = RZ.find(x => x.id === id) || RZ[0];
+  tekRazdel = r.id; aktivnaya = r.v;
+  for (const v of VKLADKI) document.getElementById("v-" + v).hidden = v !== r.v;
+  for (const u of document.getElementById("v-" + r.v).children) u.hidden = !vidim(r, u.dataset.blok || "");
+  document.querySelectorAll("#menu button").forEach(kn => kn.dataset.r === r.id ? kn.setAttribute("aria-current", "page") : kn.removeAttribute("aria-current"));
+  const vi = document.getElementById("verhImya");
+  vi.textContent = "";
+  const im = el("img", ""); im.alt = ""; im.src = IK + r.ic; im.onerror = () => im.remove();
+  vi.append(im, r.n);
+  document.getElementById("shapka").hidden = true;          // статус — в верхней полосе, доска больше не нужна
+  const v0 = document.getElementById("v-" + r.v);
+  let pu = document.getElementById("pustoRazdel");
+  if (pu) pu.remove();
+  if (r.b && ![...v0.children].some(u => !u.hidden && u.dataset.blok && podhodit(u.dataset.blok, r.b))) {
+    pu = el("section", "list", podpis("Здесь пока пусто: бот пришлёт эти данные после ближайшего полного прогона (раз в 30 минут). Открой пульт заново кнопкой «Тюряга»."));
+    pu.id = "pustoRazdel"; v0.prepend(pu);
+  }
+  document.getElementById("oshibka").hidden = !OSHIBKA || r.v === "pult";
+  try { sessionStorage.setItem(PAMYAT, r.id); } catch (e) {}
   if (!bezProkrutki) window.scrollTo(0, 0);
-  if (imya === "bossy") zapustitZhivogo();
+  if (r.v === "bossy") zapustitZhivogo();
   animSled();
 }
-const knopki = document.querySelectorAll(".vkladki button");
-knopki.forEach(kn => kn.addEventListener("click", () => { if (kn.dataset.v !== aktivnaya) tuk("v"); pokazat(kn.dataset.v); }));
-document.querySelector(".vkladki").addEventListener("keydown", e => {
-  const i = VKLADKI.indexOf(aktivnaya), sdvig = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
-  if (!sdvig) return;
-  e.preventDefault();
-  const imya = VKLADKI[(i + sdvig + VKLADKI.length) % VKLADKI.length];
-  pokazat(imya); document.getElementById("t-" + imya).focus();
-});
-document.querySelectorAll(".vkladki img").forEach(i => { i.onerror = () => i.remove(); });
+function pokazat(imya, bezProkrutki) {                     // переход по заголовку-ссылке: первый раздел этой вкладки
+  if (!VKLADKI.includes(imya)) imya = "svodka";
+  const r = RZ.find(x => x.v === imya && !skrytyeVkladki().includes(x.id)) || RZ.find(x => x.v === imya);
+  otkryt(r.id, bezProkrutki);
+}
+function shtorka(otkr) {
+  document.body.classList.toggle("otkryto", otkr);
+  document.getElementById("shtorka").setAttribute("aria-hidden", otkr ? "false" : "true");
+  document.getElementById("burger").setAttribute("aria-expanded", otkr ? "true" : "false");
+  if (otkr) { const a = document.querySelector('#menu button[aria-current="page"]'); if (a) a.focus({ preventScroll: true }); }
+}
+function postroitMenu() {
+  const m = document.getElementById("menu"), sk = skrytyeVkladki();
+  m.textContent = "";
+  let gr = null;
+  for (const r of RAZDELY) {
+    if (r.gr) { gr = el("div", "gr zek", r.gr); continue; }
+    if (sk.includes(r.id) && r.id !== "glavnaya" && r.id !== "nastroyki") continue;
+    if (gr) { m.append(gr); gr = null; }
+    const im = el("img", ""); im.alt = ""; im.src = IK + r.ic; im.onerror = () => im.remove();
+    const kn = el("button", "", im, el("span", "", r.n)); kn.type = "button"; kn.dataset.r = r.id;
+    kn.onclick = () => { if (r.id !== tekRazdel) tuk("v"); otkryt(r.id); shtorka(false); };
+    m.append(kn);
+  }
+  document.querySelectorAll("#menu button").forEach(kn => kn.dataset.r === tekRazdel && kn.setAttribute("aria-current", "page"));
+}
+document.getElementById("burger").onclick = () => { tuk("v"); shtorka(!document.body.classList.contains("otkryto")); };
+document.getElementById("zatemn").onclick = () => shtorka(false);
+document.addEventListener("keydown", e => { if (e.key === "Escape") shtorka(false); });
+(() => {                                                    // свайп: от левого края — открыть, влево по шторке — закрыть
+  let x0 = null, y0 = 0;
+  document.addEventListener("touchstart", e => { const t = e.touches[0]; x0 = t.clientX; y0 = t.clientY; }, { passive: true });
+  document.addEventListener("touchend", e => {
+    if (x0 === null) return;
+    const t = e.changedTouches[0], dx = t.clientX - x0, dy = Math.abs(t.clientY - y0), otkr = document.body.classList.contains("otkryto");
+    if (!otkr && x0 < 28 && dx > 60 && dy < 50) shtorka(true);
+    else if (otkr && dx < -60 && dy < 60) shtorka(false);
+    x0 = null;
+  }, { passive: true });
+})();
 
 // раздел не отрисовался (кривые данные) — остальные живут
 function bezopasno(id, fn) {
@@ -1888,11 +1991,13 @@ let D = null;
     OSHIBKA = r.oshibka || "bitye";
     document.getElementById("oshibka").textContent = OSHIBKI[OSHIBKA] || OSHIBKI.bitye;
   }
-  try { document.getElementById("v-pult").append(zag("Вкладки"), nastroykiVkladok()); primenitSkrytye(); } catch (e) {}   // 14.11
-  let s = "svodka";
+  try { document.getElementById("v-pult").append(zag("Разделы меню"), nastroykiVkladok()); } catch (e) {}   // 14.11
+  try { razmetitBloki(); } catch (e) {}
+  postroitMenu();
+  let s = "glavnaya";
   try { s = sessionStorage.getItem(PAMYAT) || s; } catch (e) {}
-  if (skrytyeVkladki().includes(s)) s = "svodka";
-  pokazat(s, true);
+  if (skrytyeVkladki().includes(s) || !RZ.some(r => r.id === s)) s = "glavnaya";
+  otkryt(s, true);
 })();
 
 // --- 06.11 «Лагерь» (владелец: «чтобы я сам мог, например, на следующий день поставить время… и урон»): день, урон,
