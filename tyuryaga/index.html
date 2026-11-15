@@ -202,6 +202,7 @@ details.cep>summary::-webkit-details-marker{display:none}
 .lg-dni button{font-size:13px;padding:7px 2px;border-radius:8px;border:1px solid #6b5640;background:#efe3cc;color:#1b130d}
 .lg-dni button[aria-pressed="true"]{background:#1b130d;color:#f2d21c}
 .lg-pole{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px}
+.lg-pole.odna{grid-template-columns:1fr}
 .lg-pole label{display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--karandash);min-width:0}
 .lg-pole input,.lg-pole select{font-size:16px;padding:7px 6px;border-radius:8px;border:1px solid #6b5640;background:#fffaf0;color:#1b130d;width:100%;min-width:0}
 .pult{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}   /* без синих маркеров и «Сохранить изображение» */
@@ -2068,6 +2069,19 @@ function lagerBlok(d, v) {
   knP.onclick = () => { tuk(); bystro("lg_p_" + selP.value); };
   v.append(zag("Чем бить"), list(el("div", "podpis", "Сейчас: " + tekO.split("").map(b => RU[b]).join(" → ") + ", по " + tekP +
     " за удар. На все дни; запас под сегодняшние комбо бот не трогает."), poleO), el("section", "pult", knO, knP));
+  // 15.11 владелец: «сделай в боте скорость пробития лагерей… плавнее бить или быстрее» — темп на все дни
+  const TEMPY = [["b", "Быстро", "0,9–1 с"], ["s", "Средне", "1,5–1,7 с"], ["p", "Плавно", "2,5–3 с"], ["m", "Очень плавно", "4–5 с"]];
+  const tekT = TEMPY.some(x => x[0] === str(lg.t)) ? str(lg.t) : "b";
+  const selT = el("select", "");
+  TEMPY.forEach(([kod, nazv, p]) => { const o = el("option", "", nazv + " — " + p); o.value = kod; if (kod === tekT) o.selected = true; selT.append(o); });
+  const poleT = el("div", "lg-pole odna");
+  poleT.append(lb("Пауза между ударами", selT));
+  const knT = el("button", "glavnaya", "Поставить темп");
+  knT.type = "button";
+  knT.onclick = () => { tuk(); bystro("lg_t_" + selT.value); };
+  const tT = TEMPY.find(x => x[0] === tekT);
+  v.append(zag("Темп ударов"), list(el("div", "podpis", "Сейчас: " + tT[1].toLowerCase() + ", между ударами " + tT[2] +
+    ". На все дни. Игра ответит «слишком часто» — бот сам замедлится до конца дня."), poleT), el("section", "pult", knT));
   v.append(el("p", "zametka", "Откроется чат с ботом — подтверди «да». Изменение увидишь здесь после следующего отчёта бота."));
 }
 
